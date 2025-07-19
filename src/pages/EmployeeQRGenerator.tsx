@@ -5,20 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QRCodeGenerator } from "@/components/attendance/QRCodeGenerator";
 import { LogOut, QrCode } from "lucide-react";
-
 const EmployeeQRGenerator = () => {
   const navigate = useNavigate();
   const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
   const [qrData] = useState(`${employee.id || '0123'}`);
-
   const handleLogout = () => {
     localStorage.removeItem("employeeLoggedIn");
     localStorage.removeItem("currentEmployee");
     navigate("/employee-login");
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-jks-subtle">
+  return <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
       <div className="bg-white shadow-sm border-b px-6 py-4">
         <div className="flex justify-between items-center">
@@ -41,20 +37,14 @@ const EmployeeQRGenerator = () => {
       {/* Navigation */}
       <div className="bg-white border-b px-6 py-2">
         <div className="flex space-x-6">
-          <button 
-            onClick={() => navigate("/employee/scan")}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
-          >
+          <button onClick={() => navigate("/employee/scan")} className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2">
             📷 Scan QR
           </button>
           <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2">
             <QrCode className="h-4 w-4" />
             QR Generator
           </button>
-          <button 
-            onClick={() => navigate("/employee/report")}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
-          >
+          <button onClick={() => navigate("/employee/report")} className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2">
             📊 My Reports
           </button>
         </div>
@@ -69,23 +59,14 @@ const EmployeeQRGenerator = () => {
             </CardHeader>
             <CardContent className="text-center space-y-6">
               <div>
-                <Input 
-                  value={qrData}
-                  readOnly
-                  className="text-center font-mono"
-                />
+                <Input value={qrData} readOnly className="text-center font-mono" />
               </div>
               
               <div className="bg-white p-8 rounded-lg inline-block border">
-                <QRCodeGenerator 
-                  employeeId={employee.id || '0123'} 
-                  locationId="EMPLOYEE_GENERATED" 
-                />
+                <QRCodeGenerator employeeId={employee.id || '0123'} locationId="EMPLOYEE_GENERATED" />
               </div>
               
-              <Button className="w-full bg-primary text-white">
-                Generate QR Code
-              </Button>
+              
             </CardContent>
           </Card>
         </div>
@@ -95,8 +76,6 @@ const EmployeeQRGenerator = () => {
       <div className="mt-12 text-center py-6 bg-primary">
         <p className="text-white">© 2025 JKS Engineering - Employee Attendance Portal</p>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default EmployeeQRGenerator;
