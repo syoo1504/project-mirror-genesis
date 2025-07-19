@@ -178,8 +178,11 @@ const EmployeeScan = () => {
     }
   };
   const handleLogout = () => {
+    // Clear both localStorage and sessionStorage
     localStorage.removeItem("employeeLoggedIn");
     localStorage.removeItem("currentEmployee");
+    sessionStorage.removeItem("employee-logged-in");
+    sessionStorage.removeItem("employee-id");
     navigate("/employee-login");
   };
   return <div className="min-h-screen bg-gradient-jks-subtle">
