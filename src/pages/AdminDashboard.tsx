@@ -21,6 +21,7 @@ import {
   Upload,
   RefreshCw
 } from "lucide-react";
+import { DangerZone } from "@/components/DangerZone";
 
 interface Employee {
   id: string;
@@ -78,6 +79,12 @@ const AdminDashboard = () => {
     emp.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredAttendanceRecords = selectedEmployee === "All Employees" 
+    ? attendanceRecords 
+    : attendanceRecords.filter(record => 
+        record.employee.includes(selectedEmployee)
+      );
+
   return (
     <div className="min-h-screen" style={{
       background: 'linear-gradient(135deg, #ADD8E6 0%, #87CEEB 100%)'
@@ -86,8 +93,8 @@ const AdminDashboard = () => {
       <div className="bg-white shadow-sm border-b px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-red-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">JKS</span>
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-jks-medium">
+              <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
           </div>
@@ -202,8 +209,8 @@ const AdminDashboard = () => {
                         <th className="text-left py-3 text-gray-600">Status</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {attendanceRecords.map((record, index) => (
+                     <tbody>
+                      {filteredAttendanceRecords.map((record, index) => (
                         <tr key={index} className="border-b">
                           <td className="py-3">{record.employee}</td>
                           <td className="py-3">{record.date}</td>
@@ -414,25 +421,32 @@ const AdminDashboard = () => {
             <div className="space-y-6">
               <Card className="bg-white">
                 <CardHeader>
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <div className="w-6 h-6 bg-primary rounded"></div>
+                    </div>
                     <div>
-                      <div className="grid grid-cols-3 gap-6 mb-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600">8</div>
-                          <p className="text-sm text-gray-600">Total Employees</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">5</div>
-                          <p className="text-sm text-gray-600">Attendance Records</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-sm text-purple-600">Last Updated</div>
-                          <p className="text-sm text-gray-600">7/20/2025, 1:38:09 AM</p>
-                        </div>
-                      </div>
+                      <CardTitle>Data Summary</CardTitle>
+                      <p className="text-muted-foreground">Current system data overview</p>
                     </div>
                   </div>
                 </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+                      <div className="text-3xl font-bold text-primary mb-2">8</div>
+                      <p className="text-sm text-muted-foreground">Total Employees</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+                      <div className="text-3xl font-bold text-green-600 mb-2">5</div>
+                      <p className="text-sm text-muted-foreground">Attendance Records</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
+                      <div className="text-sm font-medium text-purple-600 mb-1">Last Updated</div>
+                      <p className="text-sm text-muted-foreground">7/20/2025, 1:51:02 AM</p>
+                    </div>
+                  </div>
+                </CardContent>
               </Card>
 
               <Card className="bg-white">
@@ -489,6 +503,8 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <DangerZone />
             </div>
           </TabsContent>
         </Tabs>

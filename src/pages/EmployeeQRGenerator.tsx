@@ -18,15 +18,13 @@ const EmployeeQRGenerator = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{
-      background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EF4444 100%)'
-    }}>
+    <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
       <div className="bg-white shadow-sm border-b px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-red-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">JKS</span>
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-jks-medium">
+              <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-800">Employee Portal</h1>
