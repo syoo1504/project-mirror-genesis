@@ -3,12 +3,12 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
-  FileText,
+  QrCode,
   BarChart3,
   Settings,
   Calendar,
-  Mail,
-  FolderOpen,
+  Clock,
+  MapPin,
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,12 @@ interface SidebarProps {
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Users", href: "/users", icon: Users },
-  { name: "Projects", href: "/projects", icon: FolderOpen },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Calendar", href: "/calendar", icon: Calendar },
-  { name: "Messages", href: "/messages", icon: Mail },
+  { name: "Employees", href: "/employees", icon: Users },
+  { name: "QR Scanner", href: "/scanner", icon: QrCode },
+  { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Locations", href: "/locations", icon: MapPin },
+  { name: "Schedule", href: "/schedule", icon: Calendar },
+  { name: "Time Tracking", href: "/timetracking", icon: Clock },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -50,9 +50,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         <div className="flex h-16 items-center justify-between px-6 border-b">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">S</span>
+              <span className="text-white font-bold text-sm">A</span>
             </div>
-            <span className="font-semibold text-lg">System</span>
+            <span className="font-semibold text-lg">AttendanceQR</span>
           </div>
           
           <Button
@@ -88,12 +88,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         <div className="p-4 border-t">
           <div className="bg-gradient-accent rounded-lg p-4">
-            <h3 className="font-medium text-sm mb-2">Upgrade to Pro</h3>
+            <h3 className="font-medium text-sm mb-2">Need Help?</h3>
             <p className="text-xs text-muted-foreground mb-3">
-              Unlock advanced features and unlimited access.
+              Contact admin for QR code assistance.
             </p>
-            <Button size="sm" className="w-full">
-              Upgrade
+            <Button size="sm" className="w-full" variant="outline">
+              Get Support
             </Button>
           </div>
         </div>

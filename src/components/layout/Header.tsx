@@ -30,9 +30,9 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           
           <div className="hidden md:flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">S</span>
+              <span className="text-white font-bold text-sm">A</span>
             </div>
-            <span className="font-semibold text-lg">System</span>
+            <span className="font-semibold text-lg">AttendanceQR</span>
           </div>
         </div>
 
