@@ -92,7 +92,72 @@ const AdminDashboard = () => {
     status: "Active"
   });
   
-  const [attendanceRecords] = useState<AttendanceRecord[]>([
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+
+  // Load real attendance data from localStorage
+  useEffect(() => {
+    const loadAttendanceData = () => {
+      const scanHistory = JSON.parse(localStorage.getItem("scanHistory") || "[]");
+      
+      // Group scans by employee and date to create attendance records
+      const attendanceMap = new Map();
+      
+      scanHistory.forEach((scan: any) => {
+        const date = new Date(scan.timestamp).toLocaleDateString();
+        const employeeKey = `${scan.employeeId}-${date}`;
+        
+        if (!attendanceMap.has(employeeKey)) {
+          // Find employee details
+          const employee = employees.find(emp => emp.id === scan.employeeId);
+          
+          attendanceMap.set(employeeKey, {
+            employee: `${scan.employeeName || employee?.name || 'Unknown'} (${scan.employeeId})`,
+            date: date,
+            checkIn: "",
+            checkOut: "",
+            lateDuration: "On time",
+            status: "success"
+          });
+        }
+        
+        const record = attendanceMap.get(employeeKey);
+        const time = new Date(scan.timestamp).toLocaleTimeString('en-US', { 
+          hour12: false, 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        if (scan.type === "check-in") {
+          record.checkIn = time;
+          // Check if late (after 9:00 AM)
+          const checkInTime = new Date(scan.timestamp);
+          if (checkInTime.getHours() > 9 || (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 0)) {
+            const lateMinutes = (checkInTime.getHours() - 9) * 60 + checkInTime.getMinutes();
+            const lateHours = Math.floor(lateMinutes / 60);
+            const lateRemainingMinutes = lateMinutes % 60;
+            record.lateDuration = `${lateHours}h ${lateRemainingMinutes}m late`;
+          }
+        } else if (scan.type === "check-out") {
+          record.checkOut = time;
+        }
+      });
+      
+      const records = Array.from(attendanceMap.values()).sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      
+      setAttendanceRecords(records);
+    };
+
+    loadAttendanceData();
+    
+    // Set up interval to refresh data every 5 seconds
+    const interval = setInterval(loadAttendanceData, 5000);
+    
+    return () => clearInterval(interval);
+  }, [employees]);
+  
+  const [attendanceRecordsStatic] = useState<AttendanceRecord[]>([
     { employee: "Arissa Irda Binti Rais (1106)", date: "7/20/2025", checkIn: "00:35", checkOut: "00:35", lateDuration: "On time", status: "success" },
     { employee: "Muhammad Ilyashah Bin Norazman (0107)", date: "7/19/2025", checkIn: "00:34", checkOut: "00:34", lateDuration: "On time", status: "success" },
     { employee: "Muhammad Ilyashah Bin Norazman (0107)", date: "7/12/2025", checkIn: "18:59", checkOut: "18:59", lateDuration: "9h 59m", status: "success" },
@@ -125,6 +190,13 @@ const AdminDashboard = () => {
     : attendanceRecords.filter(record => 
         record.employee.includes(selectedEmployeeFilter)
       );
+
+  // Calculate real-time stats
+  const todayDate = new Date().toLocaleDateString();
+  const todayRecords = attendanceRecords.filter(record => record.date === todayDate);
+  const checkedInToday = todayRecords.filter(record => record.checkIn && record.checkIn !== "").length;
+  const checkedOutToday = todayRecords.filter(record => record.checkOut && record.checkOut !== "").length;
+  const lateToday = todayRecords.filter(record => record.lateDuration !== "On time").length;
 
   // Employee management functions
   const handleAddEmployee = () => {
@@ -219,7 +291,7 @@ const AdminDashboard = () => {
               <Users className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">8</div>
+              <div className="text-3xl font-bold">{employees.length}</div>
             </CardContent>
           </Card>
 
@@ -229,7 +301,7 @@ const AdminDashboard = () => {
               <Clock className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">1</div>
+              <div className="text-3xl font-bold text-green-600">{checkedInToday}</div>
             </CardContent>
           </Card>
 
@@ -239,7 +311,7 @@ const AdminDashboard = () => {
               <Calendar className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600">1</div>
+              <div className="text-3xl font-bold text-blue-600">{checkedOutToday}</div>
             </CardContent>
           </Card>
 
@@ -249,7 +321,7 @@ const AdminDashboard = () => {
               <TrendingUp className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-600">0</div>
+              <div className="text-3xl font-bold text-red-600">{lateToday}</div>
             </CardContent>
           </Card>
         </div>
