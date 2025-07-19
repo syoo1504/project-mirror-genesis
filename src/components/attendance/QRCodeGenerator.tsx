@@ -64,9 +64,7 @@ export const QRCodeGenerator = ({
               <img src={qrCodeUrl} alt="Attendance QR Code" className="w-[300px] h-[300px]" />
             </div>
             <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Location: {locationId}
-              </p>
+              
               <div className="flex gap-2 justify-center">
                 
                 <Button onClick={downloadQRCode} size="sm">
