@@ -113,6 +113,9 @@ const AdminDashboard = () => {
           // Use the employee's full name from the database, fallback to scan data
           const employeeName = employee?.name || scan.employeeName || 'Unknown Employee';
           
+          // Check if employee is late (check-in after 8:30 AM)
+          const isLate = scan.type === "check-in" && scan.isLate;
+          
           attendanceMap.set(employeeKey, {
             employee: `${employeeName} (${scan.employeeId})`,
             date: date,
@@ -391,21 +394,28 @@ const AdminDashboard = () => {
                         <tr key={index} className="border-b">
                           <td className="py-3">{record.employee}</td>
                           <td className="py-3">{record.date}</td>
-                          <td className="py-3">
-                            {record.lateDuration !== "On time" && record.checkIn.includes("18:") ? (
-                              <Badge variant="destructive">Late</Badge>
-                            ) : (
-                              record.checkIn
-                            )}
-                          </td>
-                          <td className="py-3">{record.checkOut}</td>
-                          <td className="py-3">
-                            {record.lateDuration === "On time" ? (
-                              <span className="text-gray-600">On time</span>
-                            ) : (
-                              <Badge variant="destructive">{record.lateDuration}</Badge>
-                            )}
-                          </td>
+                           <td className="py-3">
+                             <div className="flex items-center gap-2">
+                               <span className="font-mono">
+                                 {record.checkIn || "--:--"}
+                               </span>
+                               {record.lateDuration !== "On time" && record.checkIn && (
+                                 <Badge variant="destructive" className="text-xs">
+                                   LATE
+                                 </Badge>
+                               )}
+                             </div>
+                           </td>
+                           <td className="py-3">
+                             <span className="font-mono">
+                               {record.checkOut || "--:--"}
+                             </span>
+                           </td>
+                           <td className="py-3">
+                             <Badge variant={record.lateDuration === "On time" ? "secondary" : "destructive"}>
+                               {record.lateDuration}
+                             </Badge>
+                           </td>
                           <td className="py-3">
                             <Badge className="bg-gray-800 text-white">success</Badge>
                           </td>

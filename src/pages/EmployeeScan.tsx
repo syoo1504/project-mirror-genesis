@@ -101,10 +101,14 @@ const EmployeeScan = () => {
         departmentStats[department][scanType === "check-in" ? "checkIns" : "checkOuts"]++;
         localStorage.setItem("departmentStats", JSON.stringify(departmentStats));
 
-        // Show appropriate popup message
+        // Show appropriate popup message with late warning if applicable  
+        const isLateAlert = scanType === "check-in" && (currentTime.getHours() > 8 || (currentTime.getHours() === 8 && currentTime.getMinutes() > 30));
         toast({
           title: isFirstScan ? "Check-in successful" : "Check-out successful",
-          description: isFirstScan ? "Have a nice day!" : "You did a great job today!",
+          description: isFirstScan 
+            ? (isLateAlert ? "⚠️ You are late! Working hours: 8:30 AM - 5:30 PM" : "Have a nice day!")
+            : "You did a great job today!",
+          variant: isLateAlert ? "destructive" : "default"
         });
       }, 3000);
     } catch (error) {
@@ -129,13 +133,16 @@ const EmployeeScan = () => {
         const scanType = isFirstScan ? "check-in" : "check-out";
         
         // Save scan data
+        // Save scan data with late detection (8:30 AM official start time)
+        const currentTime = new Date();
         const scanRecord = {
-          timestamp: new Date().toISOString(),
+          timestamp: currentTime.toISOString(),
           qrData: mockQRData,
           location: "Uploaded Image",
           type: scanType,
           employeeId: employee.id || '0123',
-          employeeName: employee.name || 'Employee User'
+          employeeName: employee.name || 'Employee User',
+          isLate: scanType === "check-in" && (currentTime.getHours() > 8 || (currentTime.getHours() === 8 && currentTime.getMinutes() > 30))
         };
         
         const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
@@ -151,10 +158,14 @@ const EmployeeScan = () => {
         departmentStats[department][scanType === "check-in" ? "checkIns" : "checkOuts"]++;
         localStorage.setItem("departmentStats", JSON.stringify(departmentStats));
         
-        // Show appropriate popup message
+        // Show appropriate popup message with late warning if applicable
+        const isLateAlert = scanType === "check-in" && (new Date().getHours() > 8 || (new Date().getHours() === 8 && new Date().getMinutes() > 30));
         toast({
           title: isFirstScan ? "Check-in successful" : "Check-out successful", 
-          description: isFirstScan ? "Have a nice day!" : "You did a great job today!",
+          description: isFirstScan 
+            ? (isLateAlert ? "⚠️ You are late! Working hours: 8:30 AM - 5:30 PM" : "Have a nice day!")
+            : "You did a great job today!",
+          variant: isLateAlert ? "destructive" : "default"
         });
       };
       reader.readAsDataURL(file);
