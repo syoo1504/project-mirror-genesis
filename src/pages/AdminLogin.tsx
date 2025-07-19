@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import jksLogo from "@/assets/jks-logo.png";
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -55,7 +56,7 @@ const AdminLogin = () => {
             {/* JKS Logo */}
             <div className="mx-auto mb-6">
               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-jks-medium">
-                <img src="/lovable-uploads/63555184-67ab-44f8-8ab2-18d6ed91f94e.png" alt="JKS Logo" className="w-16 h-16 object-contain" />
+                <img src={jksLogo} alt="JKS Logo" className="w-16 h-16 object-contain" />
               </div>
             </div>
             
