@@ -267,6 +267,75 @@ const AdminDashboard = () => {
     });
   };
 
+  const handleMigrateData = async () => {
+    try {
+      toast({
+        title: "Migration Started",
+        description: "Uploading local data to Supabase database...",
+      });
+
+      // 1. Migrate employees to Supabase
+      for (const employee of employees) {
+        const { error: empError } = await supabase
+          .from('employees')
+          .upsert({
+            employee_id: employee.id,
+            name: employee.name,
+            email: employee.email,
+            department: employee.department,
+            position: employee.designation,
+            is_active: employee.status === 'Active'
+          }, {
+            onConflict: 'employee_id'
+          });
+
+        if (empError) {
+          console.error('Error migrating employee:', empError);
+        }
+      }
+
+      // 2. Migrate attendance records to Supabase
+      for (const record of attendanceRecords) {
+        // Extract employee ID from the record (format: "Name (ID)")
+        const employeeMatch = record.employee.match(/\(([^)]+)\)$/);
+        const employeeId = employeeMatch ? employeeMatch[1] : record.employee;
+
+        // Convert date format to YYYY-MM-DD
+        const dateParts = record.date.split('/');
+        const formattedDate = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+
+        const { error: attError } = await supabase
+          .from('attendance_records')
+          .upsert({
+            employee_id: employeeId,
+            attendance_date: formattedDate,
+            check_in_time: record.checkIn && record.checkIn !== '--:--' ? `${formattedDate} ${record.checkIn}:00` : null,
+            check_out_time: record.checkOut && record.checkOut !== '--:--' ? `${formattedDate} ${record.checkOut}:00` : null,
+            status: 'present',
+            notes: record.lateDuration !== 'On time' ? `Late: ${record.lateDuration}` : null
+          }, {
+            onConflict: 'employee_id,attendance_date'
+          });
+
+        if (attError) {
+          console.error('Error migrating attendance record:', attError);
+        }
+      }
+
+      toast({
+        title: "Migration Completed",
+        description: `Successfully migrated ${employees.length} employees and ${attendanceRecords.length} attendance records to Supabase.`,
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Migration Failed",
+        description: error.message || "An error occurred during migration",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
@@ -903,7 +972,7 @@ const AdminDashboard = () => {
                   <div className="border rounded-lg p-4">
                     <h3 className="font-medium mb-2">Migrate to Supabase</h3>
                     <p className="text-sm text-gray-600 mb-4">Upload all local data to Supabase database</p>
-                    <Button className="bg-gray-800 text-white">
+                    <Button onClick={handleMigrateData} className="bg-gray-800 text-white">
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Migrate Data
                     </Button>
