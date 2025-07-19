@@ -107,11 +107,14 @@ const AdminDashboard = () => {
         const employeeKey = `${scan.employeeId}-${date}`;
         
         if (!attendanceMap.has(employeeKey)) {
-          // Find employee details
+          // Find employee details from the employees database
           const employee = employees.find(emp => emp.id === scan.employeeId);
           
+          // Use the employee's full name from the database, fallback to scan data
+          const employeeName = employee?.name || scan.employeeName || 'Unknown Employee';
+          
           attendanceMap.set(employeeKey, {
-            employee: `${scan.employeeName || employee?.name || 'Unknown'} (${scan.employeeId})`,
+            employee: `${employeeName} (${scan.employeeId})`,
             date: date,
             checkIn: "",
             checkOut: "",
