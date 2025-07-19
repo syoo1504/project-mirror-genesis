@@ -23,14 +23,24 @@ const EmployeeScan = () => {
     return todayScans.length === 0;
   };
 
-  const handleStartScan = () => {
+  const handleStartScan = async () => {
     setIsScanning(true);
     
-    // Simulate camera opening and QR scan
-    setTimeout(() => {
-      const mockQRData = `EMP${employee.id || '0123'}_${Date.now()}`;
-      setLastScan(mockQRData);
-      setIsScanning(false);
+    try {
+      // Request camera permission and start real camera
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Prefer back camera for QR scanning
+      });
+      
+      // For demo purposes, we'll still simulate QR detection after 3 seconds
+      // In a real implementation, you'd use the Html5QrcodeScanner here
+      setTimeout(() => {
+        // Stop the camera stream
+        stream.getTracks().forEach(track => track.stop());
+        
+        const mockQRData = `EMP${employee.id || '0123'}_${Date.now()}`;
+        setLastScan(mockQRData);
+        setIsScanning(false);
 
       const isFirstScan = isFirstScanOfDay();
       const scanType = isFirstScan ? "check-in" : "check-out";
@@ -59,11 +69,19 @@ const EmployeeScan = () => {
       localStorage.setItem("departmentStats", JSON.stringify(departmentStats));
 
       // Show appropriate popup message
+        toast({
+          title: isFirstScan ? "Check-in successful" : "Check-out successful",
+          description: isFirstScan ? "Have a nice day!" : "You did a great job today!",
+        });
+      }, 3000);
+    } catch (error) {
+      setIsScanning(false);
       toast({
-        title: isFirstScan ? "Check-in successful" : "Check-out successful",
-        description: isFirstScan ? "Have a nice day!" : "You did a great job today!",
+        title: "Camera Error",
+        description: "Unable to access camera. Please check permissions.",
+        variant: "destructive"
       });
-    }, 2000);
+    }
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

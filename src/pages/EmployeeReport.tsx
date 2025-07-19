@@ -260,8 +260,9 @@ const EmployeeReport = () => {
                       workingHours = `${hours}h ${minutes}m`;
                     }
 
-                    // Check if late (after 9:00 AM)
-                    const isLate = checkIn && new Date(checkIn.timestamp).getHours() >= 9;
+                    // Check if late (after 9:00 AM) - predefined working hours
+                    const checkInTime = checkIn ? new Date(checkIn.timestamp) : null;
+                    const isLate = checkInTime && (checkInTime.getHours() > 9 || (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 0));
 
                     return (
                       <div key={date} className="border rounded-lg p-4 bg-gray-50">

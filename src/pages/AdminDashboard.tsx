@@ -23,12 +23,35 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DangerZone } from "@/components/DangerZone";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription 
+} from "@/components/ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 interface Employee {
   id: string;
   name: string;
   email: string;
+  phone: string;
   department: string;
+  designation: string;
   status: string;
 }
 
@@ -45,13 +68,29 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const admin = JSON.parse(localStorage.getItem("currentAdmin") || "{}");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedEmployee, setSelectedEmployee] = useState("All Employees");
+  const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState("All Employees");
   const { toast } = useToast();
-  const [employees] = useState<Employee[]>([
-    { id: "1106", name: "Arissa Irda Binti Rais", email: "arissa@jks.com.my", department: "HR", status: "Active" },
-    { id: "0123", name: "Alex", email: "alex@jks.com", department: "HR", status: "Active" },
-    { id: "0107", name: "Muhammad Ilyashah Bin Norazman", email: "ilyashah@jks.com", department: "IT", status: "Active" },
+  const [employees, setEmployees] = useState<Employee[]>([
+    { id: "1106", name: "Arissa Irda Binti Rais", email: "arissa@jks.com.my", phone: "0123456789", department: "HR", designation: "HR Executive", status: "Active" },
+    { id: "0123", name: "Alex", email: "alex@jks.com", phone: "0123456788", department: "HR", designation: "HR Manager", status: "Active" },
+    { id: "0107", name: "Muhammad Ilyashah Bin Norazman", email: "ilyashah@jks.com", phone: "0198724315", department: "IT", designation: "IT Officer", status: "Active" },
   ]);
+
+  // Employee management state
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployeeForEdit] = useState<Employee | null>(null);
+  const [selectedEmployeeForDelete, setSelectedEmployeeForDelete] = useState<Employee | null>(null);
+  const [newEmployee, setNewEmployee] = useState({
+    id: "",
+    name: "",
+    email: "",
+    phone: "",
+    department: "",
+    designation: "",
+    status: "Active"
+  });
   
   const [attendanceRecords] = useState<AttendanceRecord[]>([
     { employee: "Arissa Irda Binti Rais (1106)", date: "7/20/2025", checkIn: "00:35", checkOut: "00:35", lateDuration: "On time", status: "success" },
@@ -81,11 +120,74 @@ const AdminDashboard = () => {
     emp.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredAttendanceRecords = selectedEmployee === "All Employees" 
+  const filteredAttendanceRecords = selectedEmployeeFilter === "All Employees" 
     ? attendanceRecords 
     : attendanceRecords.filter(record => 
-        record.employee.includes(selectedEmployee)
+        record.employee.includes(selectedEmployeeFilter)
       );
+
+  // Employee management functions
+  const handleAddEmployee = () => {
+    if (!newEmployee.name || !newEmployee.email || !newEmployee.id) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const employee: Employee = {
+      ...newEmployee,
+      id: newEmployee.id
+    };
+
+    setEmployees([...employees, employee]);
+    setNewEmployee({
+      id: "",
+      name: "",
+      email: "",
+      phone: "",
+      department: "",
+      designation: "",
+      status: "Active"
+    });
+    setIsAddDialogOpen(false);
+    
+    toast({
+      title: "Employee Added",
+      description: `${employee.name} has been added successfully`,
+    });
+  };
+
+  const handleEditEmployee = () => {
+    if (!selectedEmployee) return;
+
+    setEmployees(employees.map(emp => 
+      emp.id === selectedEmployee.id ? selectedEmployee : emp
+    ));
+    setIsEditDialogOpen(false);
+    setSelectedEmployeeForEdit(null);
+    
+    toast({
+      title: "Employee Updated",
+      description: `${selectedEmployee.name} has been updated successfully`,
+    });
+  };
+
+  const handleDeleteEmployee = () => {
+    if (!selectedEmployeeForDelete) return;
+
+    setEmployees(employees.filter(emp => emp.id !== selectedEmployeeForDelete.id));
+    setIsDeleteDialogOpen(false);
+    setSelectedEmployeeForDelete(null);
+    
+    toast({
+      title: "Employee Deleted",
+      description: `${selectedEmployeeForDelete.name} has been deleted permanently`,
+      variant: "destructive"
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-jks-subtle">
@@ -178,7 +280,7 @@ const AdminDashboard = () => {
                 <div className="flex gap-4 mt-4">
                   <div className="flex-1">
                     <label className="text-sm font-medium">Filter by Employee</label>
-                    <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                    <Select value={selectedEmployeeFilter} onValueChange={setSelectedEmployeeFilter}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -249,18 +351,95 @@ const AdminDashboard = () => {
                     <CardTitle>Employee Management</CardTitle>
                     <p className="text-gray-600">Manage employee records - add, edit, and delete employees</p>
                   </div>
-                  <Button 
-                    className="bg-gray-800 text-white"
-                    onClick={() => {
-                      toast({
-                        title: "Add Employee",
-                        description: "Employee management feature activated",
-                      });
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Employee
-                  </Button>
+                  <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-gray-800 text-white">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Employee
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Add New Employee</DialogTitle>
+                        <DialogDescription>
+                          Enter the employee details below.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="id" className="text-right">ID</Label>
+                          <Input
+                            id="id"
+                            value={newEmployee.id}
+                            onChange={(e) => setNewEmployee({...newEmployee, id: e.target.value})}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">Name</Label>
+                          <Input
+                            id="name"
+                            value={newEmployee.name}
+                            onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="email" className="text-right">Email</Label>
+                          <Input
+                            id="email"
+                            value={newEmployee.email}
+                            onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="phone" className="text-right">Phone</Label>
+                          <Input
+                            id="phone"
+                            value={newEmployee.phone}
+                            onChange={(e) => setNewEmployee({...newEmployee, phone: e.target.value})}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="department" className="text-right">Department</Label>
+                          <Input
+                            id="department"
+                            value={newEmployee.department}
+                            onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="designation" className="text-right">Designation</Label>
+                          <Input
+                            id="designation"
+                            value={newEmployee.designation}
+                            onChange={(e) => setNewEmployee({...newEmployee, designation: e.target.value})}
+                            className="col-span-3"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="status" className="text-right">Status</Label>
+                          <Select value={newEmployee.status} onValueChange={(value) => setNewEmployee({...newEmployee, status: value})}>
+                            <SelectTrigger className="col-span-3">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Active">Active</SelectItem>
+                              <SelectItem value="Inactive">Inactive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={handleAddEmployee} className="bg-gray-800 text-white">
+                          Add Employee
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
                 <div className="relative mt-4">
@@ -281,7 +460,9 @@ const AdminDashboard = () => {
                         <th className="text-left py-3 text-gray-600">Employee ID</th>
                         <th className="text-left py-3 text-gray-600">Name</th>
                         <th className="text-left py-3 text-gray-600">Email</th>
+                        <th className="text-left py-3 text-gray-600">Phone</th>
                         <th className="text-left py-3 text-gray-600">Department</th>
+                        <th className="text-left py-3 text-gray-600">Designation</th>
                         <th className="text-left py-3 text-gray-600">Status</th>
                         <th className="text-left py-3 text-gray-600">Actions</th>
                       </tr>
@@ -292,37 +473,135 @@ const AdminDashboard = () => {
                           <td className="py-3">{employee.id}</td>
                           <td className="py-3">{employee.name}</td>
                           <td className="py-3">{employee.email}</td>
+                          <td className="py-3">{employee.phone}</td>
                           <td className="py-3">{employee.department}</td>
+                          <td className="py-3">{employee.designation}</td>
                           <td className="py-3">
                             <Badge variant="secondary">{employee.status}</Badge>
                           </td>
                           <td className="py-3">
                             <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => {
-                                  toast({
-                                    title: "Edit Employee",
-                                    description: `Editing ${employee.name}`,
-                                  });
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => {
-                                  toast({
-                                    title: "Delete Employee",
-                                    description: `Deleted ${employee.name}`,
-                                    variant: "destructive"
-                                  });
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => setSelectedEmployeeForEdit(employee)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                  <DialogHeader>
+                                    <DialogTitle>Edit Employee</DialogTitle>
+                                    <DialogDescription>
+                                      Update the employee details below.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  {selectedEmployee && (
+                                    <div className="grid gap-4 py-4">
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="edit-id" className="text-right">ID</Label>
+                                        <Input
+                                          id="edit-id"
+                                          value={selectedEmployee.id}
+                                          onChange={(e) => setSelectedEmployeeForEdit({...selectedEmployee, id: e.target.value})}
+                                          className="col-span-3"
+                                          disabled
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="edit-name" className="text-right">Name</Label>
+                                        <Input
+                                          id="edit-name"
+                                          value={selectedEmployee.name}
+                                          onChange={(e) => setSelectedEmployeeForEdit({...selectedEmployee, name: e.target.value})}
+                                          className="col-span-3"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="edit-email" className="text-right">Email</Label>
+                                        <Input
+                                          id="edit-email"
+                                          value={selectedEmployee.email}
+                                          onChange={(e) => setSelectedEmployeeForEdit({...selectedEmployee, email: e.target.value})}
+                                          className="col-span-3"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="edit-phone" className="text-right">Phone</Label>
+                                        <Input
+                                          id="edit-phone"
+                                          value={selectedEmployee.phone}
+                                          onChange={(e) => setSelectedEmployeeForEdit({...selectedEmployee, phone: e.target.value})}
+                                          className="col-span-3"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="edit-department" className="text-right">Department</Label>
+                                        <Input
+                                          id="edit-department"
+                                          value={selectedEmployee.department}
+                                          onChange={(e) => setSelectedEmployeeForEdit({...selectedEmployee, department: e.target.value})}
+                                          className="col-span-3"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="edit-designation" className="text-right">designation</Label>
+                                        <Input
+                                          id="edit-designation"
+                                          value={selectedEmployee.designation}
+                                          onChange={(e) => setSelectedEmployeeForEdit({...selectedEmployee, designation: e.target.value})}
+                                          className="col-span-3"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="edit-status" className="text-right">Status</Label>
+                                        <Select value={selectedEmployee.status} onValueChange={(value) => setSelectedEmployeeForEdit({...selectedEmployee, status: value})}>
+                                          <SelectTrigger className="col-span-3">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="Active">Active</SelectItem>
+                                            <SelectItem value="Inactive">Inactive</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <DialogFooter>
+                                    <Button onClick={handleEditEmployee} className="bg-gray-800 text-white">
+                                      Update Employee
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                              
+                              <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                                <AlertDialogTrigger asChild>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => setSelectedEmployeeForDelete(employee)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the employee record for {selectedEmployeeForDelete?.name}.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteEmployee} className="bg-red-600 hover:bg-red-700">
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </td>
                         </tr>
