@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import jksLogo from "@/assets/jks-logo.png";
 const EmployeeLogin = () => {
   const [employeeId, setEmployeeId] = useState("");
@@ -27,28 +28,88 @@ const EmployeeLogin = () => {
 
     setIsLoading(true);
 
-    // Simple demo authentication
-    setTimeout(() => {
-      // For demo, accept any employee ID with password "emp123"
-      if (password === "emp123") {
-        // Set session storage to mark user as logged in
-        sessionStorage.setItem('employee-logged-in', 'true');
-        sessionStorage.setItem('employee-id', employeeId);
+    try {
+      // Check if employee exists in Supabase
+      const { data: employee, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .eq('is_active', true)
+        .single();
+
+      if (error || !employee) {
+        // Fallback to demo employees if not in Supabase
+        const localEmployees = [
+          { id: "1106", name: "Arissa Irda Binti Rais", email: "arissa@jks.com.my", department: "HR", designation: "HR Executive" },
+          { id: "0123", name: "Alex", email: "alex@jks.com", department: "HR", designation: "HR Manager" },
+          { id: "0107", name: "Muhammad Ilyashah Bin Nor Azman", email: "ilyashah@jks.com", department: "IT", designation: "IT Officer" },
+        ];
         
-        toast({
-          title: "Login Successful",
-          description: "Welcome to AttendEase Employee Portal",
-        });
-        navigate("/employee/scan");
+        const localEmployee = localEmployees.find(emp => emp.id === employeeId);
+        
+        if (localEmployee && password === "emp123") {
+          // Store employee details for sync
+          const employeeData = {
+            id: localEmployee.id,
+            name: localEmployee.name,
+            email: localEmployee.email,
+            department: localEmployee.department,
+            designation: localEmployee.designation
+          };
+          
+          sessionStorage.setItem('employee-logged-in', 'true');
+          sessionStorage.setItem('employee-id', employeeId);
+          localStorage.setItem('currentEmployee', JSON.stringify(employeeData));
+          
+          toast({
+            title: "Login Successful",
+            description: `Welcome ${localEmployee.name}!`,
+          });
+          navigate("/employee/scan");
+        } else {
+          toast({
+            title: "Login Failed",
+            description: "Invalid Employee ID or password",
+            variant: "destructive",
+          });
+        }
       } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid Employee ID or password",
-          variant: "destructive",
-        });
+        // Employee found in Supabase
+        if (password === "emp123") {
+          const employeeData = {
+            id: employee.employee_id,
+            name: employee.name,
+            email: employee.email,
+            department: employee.department,
+            designation: employee.position
+          };
+          
+          sessionStorage.setItem('employee-logged-in', 'true');
+          sessionStorage.setItem('employee-id', employeeId);
+          localStorage.setItem('currentEmployee', JSON.stringify(employeeData));
+          
+          toast({
+            title: "Login Successful",
+            description: `Welcome ${employee.name}!`,
+          });
+          navigate("/employee/scan");
+        } else {
+          toast({
+            title: "Login Failed",
+            description: "Invalid Employee ID or password",
+            variant: "destructive",
+          });
+        }
       }
-      setIsLoading(false);
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "An error occurred during login",
+        variant: "destructive",
+      });
+    }
+    
+    setIsLoading(false);
   };
   return <div className="min-h-screen bg-gradient-jks-subtle flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white shadow-jks-strong">

@@ -278,6 +278,9 @@ const AdminDashboard = () => {
         description: "Uploading local data to Supabase database...",
       });
 
+      let migratedEmployees = 0;
+      let migratedAttendance = 0;
+
       // 1. Migrate employees to Supabase
       for (const employee of employees) {
         const { error: empError } = await supabase
@@ -295,10 +298,64 @@ const AdminDashboard = () => {
 
         if (empError) {
           console.error('Error migrating employee:', empError);
+        } else {
+          migratedEmployees++;
         }
       }
 
-      // 2. Migrate attendance records to Supabase
+      // 2. Migrate attendance records from localStorage scan history
+      const scanHistory = JSON.parse(localStorage.getItem("scanHistory") || "[]");
+      for (const scan of scanHistory) {
+        const scanDate = new Date(scan.timestamp);
+        const formattedDate = scanDate.toISOString().split('T')[0];
+        
+        // Group scans by employee and date to handle check-in/check-out
+        const existingRecord = await supabase
+          .from('attendance_records')
+          .select('*')
+          .eq('employee_id', scan.employeeId)
+          .eq('attendance_date', formattedDate)
+          .maybeSingle();
+
+        if (existingRecord.error && existingRecord.error.code !== 'PGRST116') {
+          console.error('Error checking existing record:', existingRecord.error);
+          continue;
+        }
+
+        const recordData: any = {
+          employee_id: scan.employeeId,
+          attendance_date: formattedDate,
+          status: 'present',
+          location: scan.location || 'Main Office',
+          notes: scan.isLate ? 'Late arrival' : null
+        };
+
+        if (scan.type === 'check-in') {
+          recordData.check_in_time = scan.timestamp;
+          if (existingRecord.data?.check_out_time) {
+            recordData.check_out_time = existingRecord.data.check_out_time;
+          }
+        } else if (scan.type === 'check-out') {
+          recordData.check_out_time = scan.timestamp;
+          if (existingRecord.data?.check_in_time) {
+            recordData.check_in_time = existingRecord.data.check_in_time;
+          }
+        }
+
+        const { error: attError } = await supabase
+          .from('attendance_records')
+          .upsert(recordData, {
+            onConflict: 'employee_id,attendance_date'
+          });
+
+        if (attError) {
+          console.error('Error migrating attendance record:', attError);
+        } else {
+          migratedAttendance++;
+        }
+      }
+
+      // 3. Also migrate admin dashboard attendance records if any
       for (const record of attendanceRecords) {
         // Extract employee ID from the record (format: "Name (ID)")
         const employeeMatch = record.employee.match(/\(([^)]+)\)$/);
@@ -322,13 +379,15 @@ const AdminDashboard = () => {
           });
 
         if (attError) {
-          console.error('Error migrating attendance record:', attError);
+          console.error('Error migrating admin attendance record:', attError);
+        } else {
+          migratedAttendance++;
         }
       }
 
       toast({
         title: "Migration Completed",
-        description: `Successfully migrated ${employees.length} employees and ${attendanceRecords.length} attendance records to Supabase.`,
+        description: `Successfully migrated ${migratedEmployees} employees and ${migratedAttendance} attendance records to Supabase.`,
       });
 
     } catch (error: any) {
