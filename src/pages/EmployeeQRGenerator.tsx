@@ -42,12 +42,18 @@ const EmployeeQRGenerator = () => {
       <div className="bg-white border-b px-6 py-2">
         <div className="flex space-x-6">
           <button 
+            onClick={() => navigate("/employee/portal")}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
+          >
+            ← Back
+          </button>
+          <button 
             onClick={() => navigate("/employee/scan")}
             className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
           >
             📷 Scan QR
           </button>
-          <button className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm flex items-center gap-2">
+          <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2">
             <QrCode className="h-4 w-4" />
             QR Generator
           </button>
@@ -83,7 +89,7 @@ const EmployeeQRGenerator = () => {
                 />
               </div>
               
-              <Button className="w-full bg-gray-800 text-white">
+              <Button className="w-full bg-primary text-white">
                 Generate QR Code
               </Button>
             </CardContent>
@@ -92,8 +98,8 @@ const EmployeeQRGenerator = () => {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 text-center py-6 bg-blue-600">
-        <p className="text-white">© 2025 AttendEase - Employee Attendance Portal</p>
+      <div className="mt-12 text-center py-6 bg-primary">
+        <p className="text-white">© 2025 JKS Engineering - Employee Attendance Portal</p>
       </div>
     </div>
   );

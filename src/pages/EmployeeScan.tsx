@@ -39,12 +39,34 @@ const EmployeeScan = () => {
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const mockQRData = `UPLOAD_${Date.now()}`;
-      setLastScan(mockQRData);
+    if (file && file.type.startsWith('image/')) {
+      // Simple QR code processing simulation
+      const reader = new FileReader();
+      reader.onload = () => {
+        const mockQRData = `QR_UPLOAD_${employee.id || '0123'}_${Date.now()}`;
+        setLastScan(mockQRData);
+        
+        // Save scan data
+        const scanRecord = {
+          timestamp: new Date().toISOString(),
+          qrData: mockQRData,
+          location: "Uploaded Image",
+          type: "check-in"
+        };
+        const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
+        existingScans.push(scanRecord);
+        localStorage.setItem("scanHistory", JSON.stringify(existingScans));
+        
+        toast({
+          title: "QR Code Processed",
+          description: "Attendance recorded from uploaded PNG image"
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
       toast({
-        title: "QR Code Detected",
-        description: "Attendance recorded from uploaded image"
+        title: "Invalid File",
+        description: "Please upload a PNG image file"
       });
     }
   };
@@ -54,15 +76,13 @@ const EmployeeScan = () => {
     navigate("/employee-login");
   };
   const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
-  return <div className="min-h-screen" style={{
-    background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EF4444 100%)'
-  }}>
+  return <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
       <div className="bg-white shadow-sm border-b px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-red-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">JKS</span>
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-jks-medium">
+              <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-800">Employee Portal</h1>
@@ -79,7 +99,13 @@ const EmployeeScan = () => {
       {/* Navigation */}
       <div className="bg-white border-b px-6 py-2">
         <div className="flex space-x-6">
-          <button className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm flex items-center gap-2">
+          <button 
+            onClick={() => navigate("/employee/portal")}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
+          >
+            ← Back
+          </button>
+          <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2">
             <Scan className="h-4 w-4" />
             Scan QR
           </button>
@@ -95,8 +121,8 @@ const EmployeeScan = () => {
 
       <div className="p-6 text-gray-900">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-2">Scan QR Code</h1>
-          <p className="text-blue-100 mb-8">Mark your attendance by scanning your QR code</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Scan QR Code</h1>
+          <p className="text-muted-foreground mb-8">Mark your attendance by scanning your QR code</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Camera Scanner */}
@@ -120,7 +146,7 @@ const EmployeeScan = () => {
                       </div>}
                   </div>
                   
-                  <Button onClick={handleStartScan} disabled={isScanning} className="w-full bg-gray-800 text-white">
+                  <Button onClick={handleStartScan} disabled={isScanning} className="w-full bg-primary text-white">
                     {isScanning ? "Scanning..." : "Start Camera Scanner"}
                   </Button>
                 </div>
@@ -138,12 +164,12 @@ const EmployeeScan = () => {
               <CardContent>
                 <div>
                   <label className="text-sm font-medium">Select QR Code Image</label>
-                  <input type="file" accept="image/*" onChange={handleFileUpload} ref={fileInputRef} className="hidden" />
+                  <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleFileUpload} ref={fileInputRef} className="hidden" />
                   <div className="mt-2 space-y-4">
                     <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full">
                       Choose File
                     </Button>
-                    <Button className="w-full bg-gray-400 text-white" disabled>
+                    <Button onClick={() => handleFileUpload({ target: { files: fileInputRef.current?.files } } as any)} className="w-full bg-primary text-white">
                       Process QR Image
                     </Button>
                   </div>
@@ -184,8 +210,8 @@ const EmployeeScan = () => {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 text-center py-6 bg-blue-600">
-        <p className="text-white">© 2025 AttendEase - Employee Attendance Portal</p>
+      <div className="mt-12 text-center py-6 bg-primary">
+        <p className="text-white">© 2025 JKS Engineering - Employee Attendance Portal</p>
       </div>
     </div>;
 };

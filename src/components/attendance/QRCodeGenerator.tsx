@@ -45,7 +45,7 @@ export const QRCodeGenerator = ({
   }, [employeeId, locationId]);
   const downloadQRCode = () => {
     const link = document.createElement('a');
-    link.download = `attendance-qr-${locationId}.png`;
+    link.download = `QR_Code_${employeeId}.png`;
     link.href = qrCodeUrl;
     link.click();
   };

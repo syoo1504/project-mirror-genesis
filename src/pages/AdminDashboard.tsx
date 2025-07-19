@@ -86,9 +86,7 @@ const AdminDashboard = () => {
       );
 
   return (
-    <div className="min-h-screen" style={{
-      background: 'linear-gradient(135deg, #ADD8E6 0%, #87CEEB 100%)'
-    }}>
+    <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
       <div className="bg-white shadow-sm border-b px-6 py-4">
         <div className="flex justify-between items-center">

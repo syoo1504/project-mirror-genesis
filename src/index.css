@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* JKS Color System - Professional Blue & Red Brand */
+    /* JKS Color System - Based on logo branding */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -18,15 +18,15 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* JKS Primary Blue */
-    --primary: 213 94% 68%; /* JKS Blue #4A90E2 */
+    /* JKS Primary Blue - Matching logo */
+    --primary: 207 79% 42%; /* Deep blue from logo */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 213 94% 58%;
+    --primary-hover: 207 79% 35%;
 
-    /* JKS Secondary Red */
-    --secondary: 0 84% 60%; /* JKS Red #E74C3C */
+    /* JKS Secondary Red - Matching logo */
+    --secondary: 0 89% 51%; /* Red from logo */
     --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 0 84% 50%;
+    --secondary-hover: 0 89% 45%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -39,15 +39,15 @@ All colors MUST be HSL.
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 213 94% 68%;
+    --ring: 207 79% 42%;
 
     --radius: 0.75rem;
 
-    /* JKS Brand Gradients */
-    --gradient-jks: linear-gradient(135deg, hsl(213 94% 68%) 0%, hsl(0 84% 60%) 100%);
-    --gradient-jks-subtle: linear-gradient(135deg, hsl(213 94% 95%) 0%, hsl(0 84% 95%) 100%);
-    --gradient-blue: linear-gradient(135deg, hsl(213 94% 68%) 0%, hsl(213 94% 58%) 100%);
-    --gradient-red: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 84% 50%) 100%);
+    /* JKS Brand Gradients - Updated to match logo */
+    --gradient-jks: linear-gradient(135deg, hsl(207 79% 42%) 0%, hsl(0 89% 51%) 100%);
+    --gradient-jks-subtle: linear-gradient(135deg, hsl(207 79% 95%) 0%, hsl(0 89% 95%) 100%);
+    --gradient-blue: linear-gradient(135deg, hsl(207 79% 42%) 0%, hsl(207 79% 35%) 100%);
+    --gradient-red: linear-gradient(135deg, hsl(0 89% 51%) 0%, hsl(0 89% 45%) 100%);
 
     /* Professional Shadows */
     --shadow-light: 0 2px 4px 0 hsl(213 94% 68% / 0.1);
