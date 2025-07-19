@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Lock, User } from "lucide-react";
 
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
@@ -28,9 +26,9 @@ const AdminLogin = () => {
 
     setIsLoading(true);
     
-    // Simulate admin login (username: admin, password: admin)
+    // Demo admin login (username: admin, password: admin123)
     setTimeout(() => {
-      if (username === "admin" && password === "admin") {
+      if (username === "admin" && password === "admin123") {
         localStorage.setItem("adminLoggedIn", "true");
         localStorage.setItem("currentAdmin", JSON.stringify({
           username: username,
@@ -56,51 +54,49 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <Shield className="h-8 w-8 text-red-600" />
+    <div className="min-h-screen" style={{
+      background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <Card className="w-full max-w-md bg-white shadow-xl">
+        <CardHeader className="text-center pb-6">
+          <div className="mx-auto mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto">
+              <span className="text-white font-bold text-2xl">JKS</span>
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
-          <p className="text-gray-600">AttendEase Admin Portal</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Admin Login</h1>
+          <p className="text-gray-600">Access the administrative dashboard</p>
         </CardHeader>
         
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter admin username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+            <div>
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="h-12"
+              />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter admin password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+            <div>
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12"
+              />
             </div>
             
             <Button 
               type="submit" 
-              className="w-full bg-red-600 hover:bg-red-700" 
+              className="w-full h-12 bg-red-500 hover:bg-red-600 text-white font-medium"
               disabled={isLoading}
             >
               {isLoading ? "Logging in..." : "Admin Login"}
@@ -118,7 +114,7 @@ const AdminLogin = () => {
               </button>
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              Demo: admin / admin
+              Demo: admin / admin123
             </p>
           </div>
         </CardContent>

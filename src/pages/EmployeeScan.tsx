@@ -1,24 +1,25 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Scan, Camera, Upload, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Camera, Upload, LogOut, Scan, QrCode } from "lucide-react";
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const EmployeeScan = () => {
-  const [scanning, setScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const [lastScan, setLastScan] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleStartScan = () => {
-    setScanning(true);
+    setIsScanning(true);
     // Simulate QR scan
     setTimeout(() => {
-      const mockQRData = `ATTENDEASE_${Date.now()}_LOCATION_MAIN_OFFICE`;
+      const mockQRData = `EMP${Math.random().toString().substr(2, 3)}_${Date.now()}`;
       setLastScan(mockQRData);
-      setScanning(false);
+      setIsScanning(false);
       
       // Save scan data
       const scanRecord = {
@@ -42,8 +43,7 @@ const EmployeeScan = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Simulate QR code reading from image
-      const mockQRData = `ATTENDEASE_${Date.now()}_LOCATION_UPLOADED`;
+      const mockQRData = `UPLOAD_${Date.now()}`;
       setLastScan(mockQRData);
       
       toast({
@@ -62,101 +62,172 @@ const EmployeeScan = () => {
   const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-300 to-gray-100 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">QR Scanner</h1>
-            <p className="text-gray-600">Welcome, {employee.name || "Employee"}</p>
+    <div className="min-h-screen" style={{
+      background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EF4444 100%)'
+    }}>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b px-6 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-red-500 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-lg">JKS</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">Employee Portal</h1>
+              <p className="text-sm text-gray-600">Scan your QR code for attendance</p>
+            </div>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
+          <Button 
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white"
+          >
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
         </div>
+      </div>
 
-        {/* Scanner Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Scan className="h-5 w-5" />
-              Attendance QR Scanner
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* Navigation */}
+      <div className="bg-white border-b px-6 py-2">
+        <div className="flex space-x-6">
+          <button 
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm flex items-center gap-2"
+          >
+            <Scan className="h-4 w-4" />
+            Scan QR
+          </button>
+          <button 
+            onClick={() => navigate("/employee/generator")}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
+          >
+            <QrCode className="h-4 w-4" />
+            QR Generator
+          </button>
+          <button 
+            onClick={() => navigate("/employee/report")}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
+          >
+            📊 My Reports
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-2">Scan QR Code</h1>
+          <p className="text-blue-100 mb-8">Mark your attendance by scanning your QR code</p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Camera Scanner */}
-            <div className="text-center">
-              <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                {scanning ? (
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Scanning for QR code...</p>
+            <Card className="bg-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  Camera Scanner
+                </CardTitle>
+                <p className="text-gray-600">Use your device camera to scan QR codes directly</p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center mb-4 border-2 border-dashed border-gray-300">
+                    {isScanning ? (
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Scanning for QR code...</p>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">Camera preview will appear here</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-center">
-                    <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Camera preview will appear here</p>
+                  
+                  <Button 
+                    onClick={handleStartScan} 
+                    disabled={isScanning}
+                    className="w-full bg-gray-800 text-white"
+                  >
+                    {isScanning ? "Scanning..." : "Start Camera Scanner"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Image Upload */}
+            <Card className="bg-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  📁 Upload QR Image
+                </CardTitle>
+                <p className="text-gray-600">Upload a QR code image from your device</p>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <label className="text-sm font-medium">Select QR Code Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    ref={fileInputRef}
+                    className="hidden"
+                  />
+                  <div className="mt-2 space-y-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full"
+                    >
+                      Choose File
+                    </Button>
+                    <Button 
+                      className="w-full bg-gray-400 text-white"
+                      disabled
+                    >
+                      Process QR Image
+                    </Button>
                   </div>
-                )}
-              </div>
-              
-              <Button 
-                onClick={handleStartScan} 
-                disabled={scanning}
-                className="w-full mb-4"
-              >
-                {scanning ? "Scanning..." : "Start Camera Scan"}
-              </Button>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            {/* File Upload */}
-            <div className="border-t pt-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                ref={fileInputRef}
-                className="hidden"
-              />
-              <Button 
-                variant="outline" 
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload QR Code Image
-              </Button>
-            </div>
+          {/* Instructions */}
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                📋 Instructions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-gray-700">
+                <li>• <strong>Camera Scanner:</strong> Click "Start Camera Scanner" and point your camera at the QR code</li>
+                <li>• <strong>Image Upload:</strong> Select a QR code image from your device and click "Process QR Image"</li>
+                <li>• <strong>First scan of the day = Check-in</strong></li>
+                <li>• <strong>Second scan of the day = Check-out</strong></li>
+                <li>• Make sure the QR code is clear and well-lit for best results</li>
+              </ul>
+            </CardContent>
+          </Card>
 
-            {/* Last Scan Result */}
-            {lastScan && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          {/* Last Scan Result */}
+          {lastScan && (
+            <Card className="bg-green-50 border border-green-200 mt-6">
+              <CardContent className="pt-6">
                 <h3 className="font-medium text-green-800 mb-2">Last Scan Result:</h3>
                 <p className="text-sm text-green-700 font-mono break-all">{lastScan}</p>
                 <p className="text-sm text-green-600 mt-2">
                   Scanned at: {new Date().toLocaleString()}
                 </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Navigation */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/employee/generator")}
-          >
-            Generate QR
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/employee/report")}
-          >
-            View Report
-          </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-12 text-center py-6 bg-blue-600">
+        <p className="text-white">© 2025 AttendEase - Employee Attendance Portal</p>
       </div>
     </div>
   );
