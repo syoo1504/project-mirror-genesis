@@ -29,46 +29,79 @@ const EmployeeScan = () => {
     try {
       // Request camera permission and start real camera
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } // Prefer back camera for QR scanning
+        video: { 
+          facingMode: 'environment', // Prefer back camera for QR scanning
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       });
       
-      // For demo purposes, we'll still simulate QR detection after 3 seconds
-      // In a real implementation, you'd use the Html5QrcodeScanner here
+      // Create video element to show camera feed
+      const videoElement = document.createElement('video');
+      videoElement.srcObject = stream;
+      videoElement.style.width = '100%';
+      videoElement.style.height = '100%';
+      videoElement.style.objectFit = 'cover';
+      videoElement.autoplay = true;
+      
+      // Find camera preview container and add video
+      const cameraContainer = document.querySelector('.camera-preview-container');
+      if (cameraContainer) {
+        cameraContainer.innerHTML = '';
+        cameraContainer.appendChild(videoElement);
+      }
+      
+      // Simulate QR detection after 3 seconds (in real implementation, use QR library)
       setTimeout(() => {
         // Stop the camera stream
         stream.getTracks().forEach(track => track.stop());
+        
+        // Restore camera preview placeholder
+        if (cameraContainer) {
+          cameraContainer.innerHTML = `
+            <div class="text-center">
+              <svg class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <p class="text-gray-600">Camera preview will appear here</p>
+            </div>
+          `;
+        }
         
         const mockQRData = `EMP${employee.id || '0123'}_${Date.now()}`;
         setLastScan(mockQRData);
         setIsScanning(false);
 
-      const isFirstScan = isFirstScanOfDay();
-      const scanType = isFirstScan ? "check-in" : "check-out";
+        const isFirstScan = isFirstScanOfDay();
+        const scanType = isFirstScan ? "check-in" : "check-out";
 
-      // Save scan data
-      const scanRecord = {
-        timestamp: new Date().toISOString(),
-        qrData: mockQRData,
-        location: "Main Office",
-        type: scanType,
-        employeeId: employee.id || '0123',
-        employeeName: employee.name || 'Employee User'
-      };
-      
-      const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
-      existingScans.push(scanRecord);
-      localStorage.setItem("scanHistory", JSON.stringify(existingScans));
+        // Save scan data with late detection (8:30 AM official start time)
+        const currentTime = new Date();
+        const scanRecord = {
+          timestamp: currentTime.toISOString(),
+          qrData: mockQRData,
+          location: "Main Office",
+          type: scanType,
+          employeeId: employee.id || '0123',
+          employeeName: employee.name || 'Employee User',
+          isLate: scanType === "check-in" && (currentTime.getHours() > 8 || (currentTime.getHours() === 8 && currentTime.getMinutes() > 30))
+        };
+        
+        const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
+        existingScans.push(scanRecord);
+        localStorage.setItem("scanHistory", JSON.stringify(existingScans));
 
-      // Update department analytics
-      const departmentStats = JSON.parse(localStorage.getItem("departmentStats") || "{}");
-      const department = employee.department || "General";
-      if (!departmentStats[department]) {
-        departmentStats[department] = { checkIns: 0, checkOuts: 0 };
-      }
-      departmentStats[department][scanType === "check-in" ? "checkIns" : "checkOuts"]++;
-      localStorage.setItem("departmentStats", JSON.stringify(departmentStats));
+        // Update department analytics
+        const departmentStats = JSON.parse(localStorage.getItem("departmentStats") || "{}");
+        const department = employee.department || "General";
+        if (!departmentStats[department]) {
+          departmentStats[department] = { checkIns: 0, checkOuts: 0 };
+        }
+        departmentStats[department][scanType === "check-in" ? "checkIns" : "checkOuts"]++;
+        localStorage.setItem("departmentStats", JSON.stringify(departmentStats));
 
-      // Show appropriate popup message
+        // Show appropriate popup message
         toast({
           title: isFirstScan ? "Check-in successful" : "Check-out successful",
           description: isFirstScan ? "Have a nice day!" : "You did a great job today!",
@@ -192,14 +225,20 @@ const EmployeeScan = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center mb-4 border-2 border-dashed border-gray-300">
-                    {isScanning ? <div className="text-center">
+                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center mb-4 border-2 border-dashed border-gray-300 camera-preview-container">
+                    {isScanning ? (
+                      <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-gray-600">Scanning for QR code...</p>
-                      </div> : <div className="text-center">
+                        <p className="text-gray-600">Accessing camera...</p>
+                        <p className="text-xs text-gray-500 mt-2">Position QR code in camera view</p>
+                      </div>
+                    ) : (
+                      <div className="text-center">
                         <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-gray-600">Camera preview will appear here</p>
-                      </div>}
+                        <p className="text-xs text-gray-500 mt-2">Working hours: 8:30 AM - 5:30 PM</p>
+                      </div>
+                    )}
                   </div>
                   
                   <Button onClick={handleStartScan} disabled={isScanning} className="w-full bg-primary text-white">
@@ -258,6 +297,7 @@ const EmployeeScan = () => {
               <ul className="space-y-2 text-gray-700">
                 <li>• <strong>Camera Scanner:</strong> Click "Start Camera Scanner" and point your camera at the QR code</li>
                 <li>• <strong>Image Upload:</strong> Select a QR code image from your device and click "Process QR Image"</li>
+                <li>• <strong>Working Hours:</strong> 8:30 AM - 5:30 PM (Late arrival flagged after 8:30 AM)</li>
                 <li>• <strong>First scan of the day = Check-in</strong></li>
                 <li>• <strong>Second scan of the day = Check-out</strong></li>
                 <li>• Make sure the QR code is clear and well-lit for best results</li>

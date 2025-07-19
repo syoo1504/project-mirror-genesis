@@ -129,10 +129,10 @@ const AdminDashboard = () => {
         
         if (scan.type === "check-in") {
           record.checkIn = time;
-          // Check if late (after 9:00 AM)
+          // Check if late (after 8:30 AM) - official working hours 8:30 AM to 5:30 PM
           const checkInTime = new Date(scan.timestamp);
-          if (checkInTime.getHours() > 9 || (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 0)) {
-            const lateMinutes = (checkInTime.getHours() - 9) * 60 + checkInTime.getMinutes();
+          if (checkInTime.getHours() > 8 || (checkInTime.getHours() === 8 && checkInTime.getMinutes() > 30)) {
+            const lateMinutes = ((checkInTime.getHours() - 8) * 60 + checkInTime.getMinutes()) - 30;
             const lateHours = Math.floor(lateMinutes / 60);
             const lateRemainingMinutes = lateMinutes % 60;
             record.lateDuration = `${lateHours}h ${lateRemainingMinutes}m late`;

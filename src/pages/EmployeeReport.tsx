@@ -17,13 +17,14 @@ const EmployeeReport = () => {
   const [scanHistory, setScanHistory] = useState<ScanRecord[]>([]);
   const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
   
-  // Enhanced employee data - get full name and department from admin records
+  // Enhanced employee data - get full name and department from admin records (synced with admin dashboard)
   const getEmployeeDetails = () => {
     const employees = [
       { id: "1106", name: "Arissa Irda Binti Rais", department: "HR" },
-      { id: "0123", name: "Alex", department: "HR" },
+      { id: "0123", name: "Alex", department: "HR" }, 
       { id: "0107", name: "Muhammad Ilyashah Bin Norazman", department: "IT" },
       { id: "1804", name: "Employee 1804", department: "General" },
+      // Add more employees as needed to sync with admin dashboard
     ];
     const fullEmployee = employees.find(emp => emp.id === employee.id);
     return {
@@ -264,9 +265,9 @@ const EmployeeReport = () => {
                       workingHours = `${hours}h ${minutes}m`;
                     }
 
-                    // Check if late (after 9:00 AM) - predefined working hours
+                    // Check if late (after 8:30 AM) - official working hours 8:30 AM to 5:30 PM
                     const checkInTime = checkIn ? new Date(checkIn.timestamp) : null;
-                    const isLate = checkInTime && (checkInTime.getHours() > 9 || (checkInTime.getHours() === 9 && checkInTime.getMinutes() > 0));
+                    const isLate = checkInTime && (checkInTime.getHours() > 8 || (checkInTime.getHours() === 8 && checkInTime.getMinutes() > 30));
 
                     return (
                       <div key={date} className="border rounded-lg p-4 bg-gray-50">
