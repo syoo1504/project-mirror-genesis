@@ -42,9 +42,7 @@ const EmployeePortal = () => {
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-gray-600 mb-4">{item.description}</p>
-                <Button className="w-full">
-                  Access
-                </Button>
+                
               </CardContent>
             </Card>)}
         </div>
