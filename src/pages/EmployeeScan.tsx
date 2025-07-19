@@ -113,7 +113,7 @@ const EmployeeScan = () => {
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-2">Scan QR Code</h1>
-          <p className="text-blue-100 mb-8">Mark your attendance by scanning your QR code</p>
+          <p className="text-primary mb-8">Mark your attendance by scanning your QR code</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Camera Scanner */}
