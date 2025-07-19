@@ -17,15 +17,19 @@ const EmployeeReport = () => {
   const [scanHistory, setScanHistory] = useState<ScanRecord[]>([]);
   const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
   
-  // Enhanced employee data - try to get full name from admin records
-  const getEmployeeFullName = () => {
+  // Enhanced employee data - get full name and department from admin records
+  const getEmployeeDetails = () => {
     const employees = [
-      { id: "1106", name: "Arissa Irda Binti Rais" },
-      { id: "0123", name: "Alex" },
-      { id: "0107", name: "Muhammad Ilyashah Bin Norazman" },
+      { id: "1106", name: "Arissa Irda Binti Rais", department: "HR" },
+      { id: "0123", name: "Alex", department: "HR" },
+      { id: "0107", name: "Muhammad Ilyashah Bin Norazman", department: "IT" },
+      { id: "1804", name: "Employee 1804", department: "General" },
     ];
     const fullEmployee = employees.find(emp => emp.id === employee.id);
-    return fullEmployee ? fullEmployee.name : (employee.name || 'Employee User');
+    return {
+      name: fullEmployee ? fullEmployee.name : (employee.name || 'Employee User'),
+      department: fullEmployee ? fullEmployee.department : (employee.department || 'General')
+    };
   };
 
   const calculateAttendanceRate = () => {
@@ -48,8 +52,8 @@ const EmployeeReport = () => {
     const reportData = {
       employee: {
         id: employee.id || 'EMP001',
-        name: getEmployeeFullName(),
-        department: employee.department || 'General',
+        name: getEmployeeDetails().name,
+        department: getEmployeeDetails().department,
       },
       summary: {
         totalScans: scanHistory.length,
@@ -205,11 +209,11 @@ const EmployeeReport = () => {
               </div>
               <div>
                 <span className="font-medium">Name:</span>
-                <p className="text-gray-600">{getEmployeeFullName()}</p>
+                <p className="text-gray-600">{getEmployeeDetails().name}</p>
               </div>
               <div>
                 <span className="font-medium">Department:</span>
-                <p className="text-gray-600">{employee.department || 'General'}</p>
+                <p className="text-gray-600">{getEmployeeDetails().department}</p>
               </div>
               <div>
                 <span className="font-medium">Report Generated:</span>
