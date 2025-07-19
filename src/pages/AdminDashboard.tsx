@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,10 @@ const AdminDashboard = () => {
     { id: "0123", name: "Alex", email: "alex@jks.com", phone: "0123456788", department: "HR", designation: "HR Manager", status: "Active" },
     { id: "0107", name: "Muhammad Ilyashah Bin Norazman", email: "ilyashah@jks.com", phone: "0198724315", department: "IT", designation: "IT Officer", status: "Active" },
   ]);
+
+  // File upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Employee management state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -331,6 +335,98 @@ const AdminDashboard = () => {
       toast({
         title: "Migration Failed",
         description: error.message || "An error occurred during migration",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCreateBackup = () => {
+    try {
+      const backupData = {
+        employees,
+        attendanceRecords,
+        timestamp: new Date().toISOString(),
+        version: "1.0"
+      };
+
+      const dataStr = JSON.stringify(backupData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `jks-attendance-backup-${new Date().toISOString().split('T')[0]}.json`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Backup Created",
+        description: "Backup file has been downloaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Backup Failed",
+        description: "Failed to create backup file",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleChooseFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setSelectedFile(file || null);
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please choose a backup file first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const fileContent = await selectedFile.text();
+      const backupData = JSON.parse(fileContent);
+
+      // Validate backup structure
+      if (!backupData.employees || !backupData.attendanceRecords) {
+        throw new Error("Invalid backup file format");
+      }
+
+      // Restore data
+      setEmployees(backupData.employees);
+      setAttendanceRecords(backupData.attendanceRecords);
+
+      // Update localStorage as well
+      localStorage.setItem('employees', JSON.stringify(backupData.employees));
+      localStorage.setItem('attendanceRecords', JSON.stringify(backupData.attendanceRecords));
+
+      toast({
+        title: "Restore Successful",
+        description: `Restored ${backupData.employees.length} employees and ${backupData.attendanceRecords.length} attendance records`,
+      });
+
+      // Clear file selection
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+    } catch (error) {
+      toast({
+        title: "Restore Failed",
+        description: "Failed to restore from backup file. Please check the file format.",
         variant: "destructive"
       });
     }
@@ -937,7 +1033,7 @@ const AdminDashboard = () => {
                   <div className="border rounded-lg p-4">
                     <h3 className="font-medium mb-2">Create Backup</h3>
                     <p className="text-sm text-gray-600 mb-4">Download a complete backup of all employee and attendance data</p>
-                    <Button className="bg-gray-800 text-white">
+                    <Button onClick={handleCreateBackup} className="bg-gray-800 text-white">
                       <Download className="h-4 w-4 mr-2" />
                       Create Backup
                     </Button>
@@ -947,11 +1043,20 @@ const AdminDashboard = () => {
                     <h3 className="font-medium mb-2">Restore from Backup</h3>
                     <p className="text-sm text-gray-600 mb-4">Upload and restore data from a previous backup file</p>
                     <div className="flex items-center gap-4">
-                      <Button variant="outline">
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept=".json"
+                        className="hidden"
+                      />
+                      <Button onClick={handleChooseFile} variant="outline">
                         Choose File
                       </Button>
-                      <span className="text-sm text-gray-500">No file chosen</span>
-                      <Button variant="outline">
+                      <span className="text-sm text-gray-500">
+                        {selectedFile ? selectedFile.name : "No file chosen"}
+                      </span>
+                      <Button onClick={handleRestoreBackup} variant="outline">
                         <Upload className="h-4 w-4 mr-2" />
                         Upload
                       </Button>
