@@ -60,8 +60,8 @@ const AdminLogin = () => {
           <CardHeader className="text-center pb-2 pt-8">
             {/* JKS Logo */}
             <div className="mx-auto mb-6">
-              <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-jks-medium">
-                <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-20 h-20 object-contain" />
+              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-jks-medium">
+                <img src="/lovable-uploads/63555184-67ab-44f8-8ab2-18d6ed91f94e.png" alt="JKS Logo" className="w-16 h-16 object-contain" />
               </div>
             </div>
             

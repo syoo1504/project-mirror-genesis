@@ -233,33 +233,84 @@ const EmployeeReport = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {scanHistory.map((record, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex flex-col">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium">{formatDate(record.timestamp)}</span>
-                        </div>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">{formatTime(record.timestamp)}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm">{record.location}</span>
-                      </div>
-                    </div>
+                {(() => {
+                  // Group records by date
+                  const groupedRecords = scanHistory.reduce((groups: any, record) => {
+                    const date = formatDate(record.timestamp);
+                    if (!groups[date]) {
+                      groups[date] = [];
+                    }
+                    groups[date].push(record);
+                    return groups;
+                  }, {});
+
+                  return Object.entries(groupedRecords).map(([date, records]: [string, any]) => {
+                    const dayRecords = records as ScanRecord[];
+                    const checkIn = dayRecords.find(r => r.type === "check-in");
+                    const checkOut = dayRecords.find(r => r.type === "check-out");
                     
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={record.type === "check-in" ? "default" : "secondary"}>
-                        {record.type === "check-in" ? "Check In" : "Check Out"}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                    // Calculate working hours
+                    let workingHours = "0h 0m";
+                    if (checkIn && checkOut) {
+                      const checkInTime = new Date(checkIn.timestamp);
+                      const checkOutTime = new Date(checkOut.timestamp);
+                      const diffMs = checkOutTime.getTime() - checkInTime.getTime();
+                      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                      workingHours = `${hours}h ${minutes}m`;
+                    }
+
+                    // Check if late (after 9:00 AM)
+                    const isLate = checkIn && new Date(checkIn.timestamp).getHours() >= 9;
+
+                    return (
+                      <div key={date} className="border rounded-lg p-4 bg-gray-50">
+                        <div className="mb-3">
+                          <h3 className="font-semibold text-gray-800">{date}</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <div className="text-sm font-medium text-gray-600 mb-1">Check-in</div>
+                            <div className="flex items-center gap-2">
+                              {checkIn ? (
+                                <>
+                                  <span className="font-mono text-sm">
+                                    {formatTime(checkIn.timestamp).substring(0, 5)}
+                                  </span>
+                                  {isLate && (
+                                    <Badge variant="destructive" className="text-xs px-2 py-0">
+                                      LATE
+                                    </Badge>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-gray-400">--:--</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-sm font-medium text-gray-600 mb-1">Check-out</div>
+                            <div className="font-mono text-sm">
+                              {checkOut 
+                                ? formatTime(checkOut.timestamp).substring(0, 5)
+                                : "--:--"
+                              }
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-sm font-medium text-gray-600 mb-1">Working Hours</div>
+                            <div className="font-mono text-sm">
+                              {workingHours} {workingHours === "0h 0m" ? "0" : ""}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             )}
           </CardContent>

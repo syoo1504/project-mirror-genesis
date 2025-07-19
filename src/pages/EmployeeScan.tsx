@@ -10,63 +10,108 @@ const EmployeeScan = () => {
   const [lastScan, setLastScan] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
+
+  // Check if it's the first scan of the day
+  const isFirstScanOfDay = () => {
+    const today = new Date().toDateString();
+    const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
+    const todayScans = existingScans.filter((scan: any) => 
+      new Date(scan.timestamp).toDateString() === today
+    );
+    return todayScans.length === 0;
+  };
+
   const handleStartScan = () => {
     setIsScanning(true);
-    // Simulate QR scan
+    
+    // Simulate camera opening and QR scan
     setTimeout(() => {
-      const mockQRData = `EMP${Math.random().toString().substr(2, 3)}_${Date.now()}`;
+      const mockQRData = `EMP${employee.id || '0123'}_${Date.now()}`;
       setLastScan(mockQRData);
       setIsScanning(false);
+
+      const isFirstScan = isFirstScanOfDay();
+      const scanType = isFirstScan ? "check-in" : "check-out";
 
       // Save scan data
       const scanRecord = {
         timestamp: new Date().toISOString(),
         qrData: mockQRData,
         location: "Main Office",
-        type: "check-in"
+        type: scanType,
+        employeeId: employee.id || '0123',
+        employeeName: employee.name || 'Employee User'
       };
+      
       const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
       existingScans.push(scanRecord);
       localStorage.setItem("scanHistory", JSON.stringify(existingScans));
+
+      // Update department analytics
+      const departmentStats = JSON.parse(localStorage.getItem("departmentStats") || "{}");
+      const department = employee.department || "General";
+      if (!departmentStats[department]) {
+        departmentStats[department] = { checkIns: 0, checkOuts: 0 };
+      }
+      departmentStats[department][scanType === "check-in" ? "checkIns" : "checkOuts"]++;
+      localStorage.setItem("departmentStats", JSON.stringify(departmentStats));
+
+      // Show appropriate popup message
       toast({
-        title: "QR Code Scanned",
-        description: "Attendance recorded successfully"
+        title: isFirstScan ? "Check-in successful" : "Check-out successful",
+        description: isFirstScan ? "Have a nice day!" : "You did a great job today!",
       });
     }, 2000);
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      // Simple QR code processing simulation
+    if (file && file.type === 'image/png') {
+      // Simple QR code processing simulation for PNG files
       const reader = new FileReader();
       reader.onload = () => {
         const mockQRData = `QR_UPLOAD_${employee.id || '0123'}_${Date.now()}`;
         setLastScan(mockQRData);
+        
+        const isFirstScan = isFirstScanOfDay();
+        const scanType = isFirstScan ? "check-in" : "check-out";
         
         // Save scan data
         const scanRecord = {
           timestamp: new Date().toISOString(),
           qrData: mockQRData,
           location: "Uploaded Image",
-          type: "check-in"
+          type: scanType,
+          employeeId: employee.id || '0123',
+          employeeName: employee.name || 'Employee User'
         };
+        
         const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
         existingScans.push(scanRecord);
         localStorage.setItem("scanHistory", JSON.stringify(existingScans));
+
+        // Update department analytics
+        const departmentStats = JSON.parse(localStorage.getItem("departmentStats") || "{}");
+        const department = employee.department || "General";
+        if (!departmentStats[department]) {
+          departmentStats[department] = { checkIns: 0, checkOuts: 0 };
+        }
+        departmentStats[department][scanType === "check-in" ? "checkIns" : "checkOuts"]++;
+        localStorage.setItem("departmentStats", JSON.stringify(departmentStats));
         
+        // Show appropriate popup message
         toast({
-          title: "QR Code Processed",
-          description: "Attendance recorded from uploaded PNG image"
+          title: isFirstScan ? "Check-in successful" : "Check-out successful", 
+          description: isFirstScan ? "Have a nice day!" : "You did a great job today!",
         });
       };
       reader.readAsDataURL(file);
     } else {
       toast({
         title: "Invalid File",
-        description: "Please upload a PNG image file"
+        description: "Please upload a PNG image file only",
+        variant: "destructive"
       });
     }
   };
@@ -75,7 +120,6 @@ const EmployeeScan = () => {
     localStorage.removeItem("currentEmployee");
     navigate("/employee-login");
   };
-  const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
   return <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
       <div className="bg-white shadow-sm border-b px-6 py-4">
@@ -157,13 +201,26 @@ const EmployeeScan = () => {
               </CardHeader>
               <CardContent>
                 <div>
-                  <label className="text-sm font-medium">Select QR Code Image</label>
-                  <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleFileUpload} ref={fileInputRef} className="hidden" />
+                  <label className="text-sm font-medium">Select QR Code Image (PNG only)</label>
+                  <input type="file" accept="image/png" onChange={handleFileUpload} ref={fileInputRef} className="hidden" />
                   <div className="mt-2 space-y-4">
                     <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full">
                       Choose File
                     </Button>
-                    <Button onClick={() => handleFileUpload({ target: { files: fileInputRef.current?.files } } as any)} className="w-full bg-primary text-white">
+                    <Button 
+                      onClick={() => {
+                        if (fileInputRef.current?.files?.[0]) {
+                          handleFileUpload({ target: { files: fileInputRef.current.files } } as any);
+                        } else {
+                          toast({
+                            title: "No File Selected",
+                            description: "Please select a PNG file first",
+                            variant: "destructive"
+                          });
+                        }
+                      }} 
+                      className="w-full bg-primary text-white"
+                    >
                       Process QR Image
                     </Button>
                   </div>

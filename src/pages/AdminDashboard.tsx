@@ -21,6 +21,7 @@ import {
   Upload,
   RefreshCw
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { DangerZone } from "@/components/DangerZone";
 
 interface Employee {
@@ -45,6 +46,7 @@ const AdminDashboard = () => {
   const admin = JSON.parse(localStorage.getItem("currentAdmin") || "{}");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("All Employees");
+  const { toast } = useToast();
   const [employees] = useState<Employee[]>([
     { id: "1106", name: "Arissa Irda Binti Rais", email: "arissa@jks.com.my", department: "HR", status: "Active" },
     { id: "0123", name: "Alex", email: "alex@jks.com", department: "HR", status: "Active" },
@@ -92,7 +94,7 @@ const AdminDashboard = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-jks-medium">
-              <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
+              <img src="/lovable-uploads/63555184-67ab-44f8-8ab2-18d6ed91f94e.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
           </div>
@@ -247,7 +249,15 @@ const AdminDashboard = () => {
                     <CardTitle>Employee Management</CardTitle>
                     <p className="text-gray-600">Manage employee records - add, edit, and delete employees</p>
                   </div>
-                  <Button className="bg-gray-800 text-white">
+                  <Button 
+                    className="bg-gray-800 text-white"
+                    onClick={() => {
+                      toast({
+                        title: "Add Employee",
+                        description: "Employee management feature activated",
+                      });
+                    }}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Employee
                   </Button>
@@ -288,10 +298,29 @@ const AdminDashboard = () => {
                           </td>
                           <td className="py-3">
                             <div className="flex gap-2">
-                              <Button size="sm" variant="outline">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  toast({
+                                    title: "Edit Employee",
+                                    description: `Editing ${employee.name}`,
+                                  });
+                                }}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button size="sm" variant="outline">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  toast({
+                                    title: "Delete Employee",
+                                    description: `Deleted ${employee.name}`,
+                                    variant: "destructive"
+                                  });
+                                }}
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -341,8 +370,24 @@ const AdminDashboard = () => {
                   <p className="text-gray-600">Attendance and punctuality rates by department</p>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">Department performance metrics will be displayed here</p>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={(() => {
+                        const departmentStats = JSON.parse(localStorage.getItem("departmentStats") || "{}");
+                        return Object.entries(departmentStats).map(([dept, stats]: [string, any]) => ({
+                          department: dept,
+                          checkIns: stats.checkIns || 0,
+                          checkOuts: stats.checkOuts || 0
+                        }));
+                      })()}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="department" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="checkIns" fill="#10B981" name="Check-ins" />
+                        <Bar dataKey="checkOuts" fill="#3B82F6" name="Check-outs" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
