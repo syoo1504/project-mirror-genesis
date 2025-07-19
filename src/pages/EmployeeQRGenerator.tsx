@@ -55,7 +55,8 @@ const EmployeeQRGenerator = () => {
           <Card className="bg-white">
             <CardHeader className="text-center">
               <CardTitle>QR Code Generator</CardTitle>
-              <p className="text-gray-600">Generate your personalized QR code for attendance</p>
+              <p className="text-gray-600">
+            </p>
             </CardHeader>
             <CardContent className="text-center space-y-6">
               <div>
