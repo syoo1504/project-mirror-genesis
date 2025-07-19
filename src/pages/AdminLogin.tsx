@@ -62,7 +62,7 @@ const AdminLogin = () => {
             <div className="space-y-2">
               
               <h2 className="text-xl font-semibold text-gray-700">Admin Login</h2>
-              <p className="text-gray-500 text-sm">Access the administrative dashboard</p>
+              <p className="text-gray-500 text-sm">Enter your username and password to access your portal</p>
             </div>
           </CardHeader>
           
