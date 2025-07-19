@@ -58,7 +58,7 @@ export const QRCodeGenerator = ({
       </CardHeader>
       <CardContent className="text-center space-y-4">
         {isLoading ? <div className="flex items-center justify-center h-[300px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            
           </div> : qrCodeUrl ? <>
             <div className="bg-white p-4 rounded-lg inline-block">
               <img src={qrCodeUrl} alt="Attendance QR Code" className="w-[300px] h-[300px]" />
