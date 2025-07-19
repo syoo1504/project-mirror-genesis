@@ -196,7 +196,7 @@ const AdminDashboard = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-jks-medium">
-              <img src="/lovable-uploads/63555184-67ab-44f8-8ab2-18d6ed91f94e.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
+              <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
           </div>
