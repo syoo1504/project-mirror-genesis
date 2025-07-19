@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Calendar, Clock, MapPin, Download, TrendingUp } from "lucide-react";
+import { ArrowLeft, FileText, Calendar, Clock, MapPin, Download, TrendingUp, QrCode } from "lucide-react";
 
 interface ScanRecord {
   timestamp: string;
@@ -98,19 +98,32 @@ const EmployeeReport = () => {
   return (
     <div className="min-h-screen bg-gradient-jks-subtle p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/scanner")}
-            className="mr-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Attendance Report</h1>
-            <p className="text-gray-600">Your attendance history and statistics</p>
+        {/* Header with Navigation */}
+        <div className="bg-white shadow-sm border-b px-6 py-4 mb-6 rounded-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">Attendance Report</h1>
+              <p className="text-gray-600">Your attendance history and statistics</p>
+            </div>
+          </div>
+          {/* Navigation */}
+          <div className="flex space-x-6 mt-4 pt-4 border-t">
+            <button 
+              onClick={() => navigate("/employee/scan")}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
+            >
+              📷 Scan QR
+            </button>
+            <button 
+              onClick={() => navigate("/employee/generator")}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
+            >
+              <QrCode className="h-4 w-4" />
+              QR Generator
+            </button>
+            <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2">
+              📊 My Reports
+            </button>
           </div>
         </div>
 

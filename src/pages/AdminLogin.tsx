@@ -54,19 +54,19 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-jks flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-jks-subtle flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-jks-strong border-0 overflow-hidden">
           <CardHeader className="text-center pb-2 pt-8">
             {/* JKS Logo */}
             <div className="mx-auto mb-6">
-              <div className="w-24 h-24 bg-gradient-jks rounded-2xl flex items-center justify-center shadow-jks-medium">
-                <span className="text-white font-bold text-3xl tracking-wide">JKS</span>
+              <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-jks-medium">
+                <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-20 h-20 object-contain" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-gray-800">JKS Employee Attendance</h1>
+              <h1 className="text-2xl font-bold text-gray-800">JKS Engineering Sdn Bhd</h1>
               <h2 className="text-xl font-semibold text-gray-700">Admin Login</h2>
               <p className="text-gray-500 text-sm">Access the administrative dashboard</p>
             </div>
@@ -98,7 +98,7 @@ const AdminLogin = () => {
               
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-gradient-red hover:opacity-90 text-white font-semibold rounded-lg shadow-jks-light transition-jks"
+                className="w-full h-12 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-jks-light transition-jks"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -136,7 +136,7 @@ const AdminLogin = () => {
 
         {/* Footer */}
         <div className="text-center mt-6">
-          <p className="text-white/80 text-sm">© 2024 JKS Employee Attendance System</p>
+          <p className="text-muted-foreground text-sm">© 2025 JKS Engineering Sdn Bhd - Attendance System</p>
         </div>
       </div>
     </div>

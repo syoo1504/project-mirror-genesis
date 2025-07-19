@@ -52,8 +52,7 @@ const App = () => (
             </ProtectedRoute>
           } />
           
-          {/* Legacy routes for backward compatibility */}
-          <Route path="/scanner" element={<EmployeePortal />} />
+          {/* Legacy routes removed */}
           
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />

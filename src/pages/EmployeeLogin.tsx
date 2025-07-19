@@ -55,18 +55,12 @@ const EmployeeLogin = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{
-      background: 'linear-gradient(135deg, #ADD8E6 0%, #87CEEB 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
-      <Card className="w-full max-w-md bg-white shadow-xl">
+    <div className="min-h-screen bg-gradient-jks-subtle flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white shadow-jks-strong">
         <CardHeader className="text-center pb-6">
           <div className="mx-auto mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-2xl">JKS</span>
+            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-jks-medium">
+              <img src={jksLogo} alt="JKS Logo" className="w-16 h-16 object-contain" />
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Employee Login</h1>
@@ -97,7 +91,7 @@ const EmployeeLogin = () => {
             
             <Button 
               type="submit" 
-              className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white font-medium"
+              className="w-full h-12 bg-primary hover:bg-primary-hover text-white font-medium"
               disabled={isLoading}
             >
               {isLoading ? "Logging in..." : "Login"}
@@ -107,7 +101,7 @@ const EmployeeLogin = () => {
           <div className="mt-6 text-center">
             <button
               onClick={() => navigate("/admin-login")}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-primary hover:underline text-sm"
             >
               Login as Admin
             </button>

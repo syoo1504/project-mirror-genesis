@@ -42,12 +42,6 @@ const EmployeeQRGenerator = () => {
       <div className="bg-white border-b px-6 py-2">
         <div className="flex space-x-6">
           <button 
-            onClick={() => navigate("/employee/portal")}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
-          >
-            ← Back
-          </button>
-          <button 
             onClick={() => navigate("/employee/scan")}
             className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2"
           >
