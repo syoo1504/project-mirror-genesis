@@ -52,9 +52,7 @@ export const QRCodeGenerator = ({
   return <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
         <CardTitle>Attendance QR Code</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Scan to mark attendance
-        </p>
+        <p className="text-sm text-muted-foreground">Save your QR attendance</p>
       </CardHeader>
       <CardContent className="text-center space-y-4">
         {isLoading ? <div className="flex items-center justify-center h-[300px]">
