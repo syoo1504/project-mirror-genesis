@@ -31,6 +31,10 @@ const EmployeeLogin = () => {
     setTimeout(() => {
       // For demo, accept any employee ID with password "emp123"
       if (password === "emp123") {
+        // Set session storage to mark user as logged in
+        sessionStorage.setItem('employee-logged-in', 'true');
+        sessionStorage.setItem('employee-id', employeeId);
+        
         toast({
           title: "Login Successful",
           description: "Welcome to AttendEase Employee Portal",
