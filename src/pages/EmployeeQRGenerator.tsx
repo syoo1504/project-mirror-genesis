@@ -1,26 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QRCodeGenerator } from "@/components/attendance/QRCodeGenerator";
 import { LogOut, QrCode } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import jksLogo from "@/assets/jks-logo.png";
 const EmployeeQRGenerator = () => {
   const navigate = useNavigate();
-  const employee = JSON.parse(localStorage.getItem("currentEmployee") || "{}");
-  const [qrData] = useState(`${employee.id || '0123'}`);
-  const handleLogout = () => {
-    localStorage.removeItem("employeeLoggedIn");
-    localStorage.removeItem("currentEmployee");
+  const [employee, setEmployee] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        navigate("/employee-login");
+        return;
+      }
+
+      // Get employee profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (profile) {
+        setEmployee(profile);
+      } else {
+        navigate("/employee-login");
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/employee-login");
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!employee) {
+    return null;
+  }
   return <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
       <div className="bg-white shadow-sm border-b px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-jks-medium">
-              <img src="/src/assets/jks-logo.png" alt="JKS Logo" className="w-10 h-10 object-contain" />
+              <img src={jksLogo} alt="JKS Logo" className="w-10 h-10 object-contain" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-800">Employee Portal</h1>
@@ -60,14 +97,16 @@ const EmployeeQRGenerator = () => {
             </CardHeader>
             <CardContent className="text-center space-y-6">
               <div>
-                <Input value={qrData} readOnly className="text-center font-mono" />
+                <Input value={employee.employee_id} readOnly className="text-center font-mono" />
               </div>
               
               <div className="bg-white p-8 rounded-lg inline-block border">
-                <QRCodeGenerator employeeId={employee.id || '0123'} locationId="EMPLOYEE_GENERATED" />
+                <QRCodeGenerator employeeId={employee.employee_id} locationId="EMPLOYEE_GENERATED" />
               </div>
               
-              
+              <p className="text-sm text-gray-600">
+                Welcome, {employee.name}! Use this QR code for attendance tracking.
+              </p>
             </CardContent>
           </Card>
         </div>

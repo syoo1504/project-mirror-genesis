@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,66 +8,93 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, MoreHorizontal, Clock, MapPin } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
-const employees = [
-  {
-    id: "EMP001",
-    name: "John Doe",
-    email: "john.doe@company.com",
-    department: "Engineering",
-    position: "Senior Developer",
-    status: "Present",
-    checkIn: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    location: "Office Main",
-    avatar: "/placeholder.svg",
-    initials: "JD",
-  },
-  {
-    id: "EMP002",
-    name: "Sarah Smith", 
-    email: "sarah.smith@company.com",
-    department: "Marketing",
-    position: "Marketing Manager",
-    status: "Present",
-    checkIn: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    location: "Office Branch",
-    avatar: "/placeholder.svg",
-    initials: "SS",
-  },
-  {
-    id: "EMP003",
-    name: "Mike Johnson",
-    email: "mike.johnson@company.com", 
-    department: "Sales",
-    position: "Sales Representative",
-    status: "Late",
-    checkIn: new Date(Date.now() - 2 * 60 * 60 * 1000 - 30 * 60 * 1000),
-    location: "Remote",
-    avatar: "/placeholder.svg",
-    initials: "MJ",
-  },
-  {
-    id: "EMP004",
-    name: "Emily Davis",
-    email: "emily.davis@company.com",
-    department: "HR",
-    position: "HR Specialist", 
-    status: "Absent",
-    checkIn: null,
-    location: "-",
-    avatar: "/placeholder.svg",
-    initials: "ED",
-  },
-];
+interface Employee {
+  id: string;
+  name: string;
+  email: string | null;
+  department: string | null;
+  position: string | null;
+  status: string;
+  checkIn: Date | null;
+  location: string;
+  avatar: string;
+  initials: string;
+}
 
 const Employees = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        // Fetch employees from the database
+        const { data: employeesData, error: empError } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('is_active', true);
+
+        if (empError) {
+          console.error('Error fetching employees:', empError);
+          return;
+        }
+
+        // Fetch today's attendance records
+        const today = new Date().toISOString().split('T')[0];
+        const { data: attendanceData, error: attError } = await supabase
+          .from('attendance_records')
+          .select('*')
+          .eq('attendance_date', today);
+
+        if (attError) {
+          console.error('Error fetching attendance:', attError);
+        }
+
+        // Combine employee data with attendance status
+        const employeesWithStatus = employeesData?.map(emp => {
+          const todayAttendance = attendanceData?.find(att => att.employee_id === emp.employee_id);
+          const checkInTime = todayAttendance?.check_in_time ? new Date(todayAttendance.check_in_time) : null;
+          
+          let status = "Absent";
+          if (checkInTime) {
+            const now = new Date();
+            const isLate = checkInTime.getHours() > 8 || (checkInTime.getHours() === 8 && checkInTime.getMinutes() > 30);
+            status = isLate ? "Late" : "Present";
+          }
+
+          return {
+            id: emp.employee_id,
+            name: emp.name,
+            email: emp.email,
+            department: emp.department,
+            position: emp.position,
+            status,
+            checkIn: checkInTime,
+            location: todayAttendance?.location || "-",
+            avatar: "/placeholder.svg",
+            initials: emp.name.split(' ').map((n: string) => n[0]).join('')
+          };
+        }) || [];
+
+        setEmployees(employeesWithStatus);
+      } catch (error) {
+        console.error('Error in fetchEmployees:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
 
   const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.department.toLowerCase().includes(searchTerm.toLowerCase())
+    (emp.department && emp.department.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getStatusColor = (status: string) => {
@@ -78,6 +105,10 @@ const Employees = () => {
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading employees...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import jksLogo from "@/assets/jks-logo.png";
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
@@ -25,29 +26,75 @@ const AdminLogin = () => {
     }
     setIsLoading(true);
 
-    // Demo admin login (username: admin, password: admin123)
-    setTimeout(() => {
+    try {
+      // For demo purposes, create admin account if it doesn't exist
       if (username === "admin" && password === "admin123") {
-        localStorage.setItem("adminLoggedIn", "true");
-        localStorage.setItem("currentAdmin", JSON.stringify({
-          username: username,
-          name: "System Administrator",
-          role: "Admin"
-        }));
-        toast({
-          title: "Login Successful",
-          description: "Welcome to Admin Dashboard"
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: "admin@jks.com",
+          password: "admin123"
         });
-        navigate("/admin");
+
+        if (signInError && signInError.message.includes("Invalid login credentials")) {
+          // Try to create admin account
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: "admin@jks.com",
+            password: "admin123",
+            options: {
+              emailRedirectTo: `${window.location.origin}/admin`
+            }
+          });
+
+          if (signUpError) {
+            throw signUpError;
+          }
+
+          // Create admin profile
+          if (signUpData.user) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: signUpData.user.id,
+                employee_id: 'ADMIN001',
+                name: 'System Administrator',
+                email: 'admin@jks.com',
+                role: 'admin'
+              });
+
+            if (profileError) {
+              console.error('Profile creation error:', profileError);
+            }
+          }
+
+          toast({
+            title: "Account Created",
+            description: "Admin account created successfully. Please check your email to verify."
+          });
+        } else if (signInError) {
+          throw signInError;
+        } else {
+          // Successful login
+          toast({
+            title: "Login Successful",
+            description: "Welcome to Admin Dashboard"
+          });
+          navigate("/admin");
+        }
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid username or password",
+          description: "Invalid admin credentials",
           variant: "destructive"
         });
       }
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "An error occurred during login",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
   return <div className="min-h-screen bg-gradient-jks-subtle flex items-center justify-center p-4">
       <div className="w-full max-w-md">

@@ -22,6 +22,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { DangerZone } from "@/components/DangerZone";
 import { 
   Dialog, 
@@ -179,9 +180,8 @@ const AdminDashboard = () => {
     { name: "HR Manager", value: 13, color: "#EAB308" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminLoggedIn");
-    localStorage.removeItem("currentAdmin");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/admin-login");
   };
 

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import jksLogo from "@/assets/jks-logo.png";
 const EmployeeLogin = () => {
   const [employeeId, setEmployeeId] = useState("");
@@ -25,29 +26,100 @@ const EmployeeLogin = () => {
     }
     setIsLoading(true);
 
-    // Demo login - accept any valid employee ID with password "emp123"
-    setTimeout(() => {
-      if (password === "emp123") {
-        localStorage.setItem("employeeLoggedIn", "true");
-        localStorage.setItem("currentEmployee", JSON.stringify({
-          id: employeeId,
-          name: `Employee ${employeeId}`,
-          department: "General"
-        }));
+    try {
+      // Check if employee exists in the employees table
+      const { data: employee, error: empError } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .eq('is_active', true)
+        .single();
+
+      if (empError || !employee) {
+        toast({
+          title: "Login Failed",
+          description: "Invalid Employee ID",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Try to sign in with email if exists, otherwise use employeeId@jks.com
+      const email = employee.email || `${employeeId}@jks.com`;
+      
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (signInError && signInError.message.includes("Invalid login credentials")) {
+        // If auth account doesn't exist, create it
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/employee/scan`
+          }
+        });
+
+        if (signUpError) {
+          toast({
+            title: "Login Failed",
+            description: "Unable to create account. Please contact admin.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Create profile for the new user
+        if (signUpData.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: signUpData.user.id,
+              employee_id: employee.employee_id,
+              name: employee.name,
+              email: email,
+              department: employee.department,
+              position: employee.position,
+              role: 'employee'
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+          }
+        }
+
+        toast({
+          title: "Account Created",
+          description: "Employee account created successfully!"
+        });
+        navigate("/employee/scan");
+      } else if (signInError) {
+        toast({
+          title: "Login Failed",
+          description: signInError.message,
+          variant: "destructive"
+        });
+      } else {
+        // Successful login
         toast({
           title: "Login Successful",
           description: "Welcome to AttendEase Employee Portal"
         });
         navigate("/employee/scan");
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid credentials. Use password: emp123",
-          variant: "destructive"
-        });
       }
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "An error occurred during login",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
   return <div className="min-h-screen bg-gradient-jks-subtle flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white shadow-jks-strong">
