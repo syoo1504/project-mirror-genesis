@@ -54,71 +54,91 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{
-      background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
-      <Card className="w-full max-w-md bg-white shadow-xl">
-        <CardHeader className="text-center pb-6">
-          <div className="mx-auto mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-2xl">JKS</span>
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Admin Login</h1>
-          <p className="text-gray-600">Access the administrative dashboard</p>
-        </CardHeader>
-        
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <Input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="h-12"
-              />
+    <div className="min-h-screen bg-gradient-jks flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="bg-white shadow-jks-strong border-0 overflow-hidden">
+          <CardHeader className="text-center pb-2 pt-8">
+            {/* JKS Logo */}
+            <div className="mx-auto mb-6">
+              <div className="w-24 h-24 bg-gradient-jks rounded-2xl flex items-center justify-center shadow-jks-medium">
+                <span className="text-white font-bold text-3xl tracking-wide">JKS</span>
+              </div>
             </div>
             
-            <div>
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
-              />
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-gray-800">JKS Employee Attendance</h1>
+              <h2 className="text-xl font-semibold text-gray-700">Admin Login</h2>
+              <p className="text-gray-500 text-sm">Access the administrative dashboard</p>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full h-12 bg-red-500 hover:bg-red-600 text-white font-medium"
-              disabled={isLoading}
-            >
-              {isLoading ? "Logging in..." : "Admin Login"}
-            </Button>
-          </form>
+          </CardHeader>
           
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Employee access?{" "}
-              <button
-                onClick={() => navigate("/employee-login")}
-                className="text-blue-600 hover:underline"
+          <CardContent className="px-8 pb-8">
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Username</label>
+                <Input
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-lg transition-jks"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Password</label>
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-lg transition-jks"
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-gradient-red hover:opacity-90 text-white font-semibold rounded-lg shadow-jks-light transition-jks"
+                disabled={isLoading}
               >
-                Employee Login
-              </button>
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              Demo: admin / admin123
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Logging in...
+                  </div>
+                ) : (
+                  "Admin Login"
+                )}
+              </Button>
+            </form>
+            
+            <div className="mt-6 pt-6 border-t border-gray-100">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-gray-600">
+                  Employee access?{" "}
+                  <button
+                    onClick={() => navigate("/employee-login")}
+                    className="text-primary font-medium hover:underline transition-jks"
+                  >
+                    Employee Login
+                  </button>
+                </p>
+                
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-600 font-medium mb-1">Demo Credentials:</p>
+                  <p className="text-xs text-gray-500">Username: <span className="font-mono">admin</span></p>
+                  <p className="text-xs text-gray-500">Password: <span className="font-mono">admin123</span></p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <p className="text-white/80 text-sm">© 2024 JKS Employee Attendance System</p>
+        </div>
+      </div>
     </div>
   );
 };
