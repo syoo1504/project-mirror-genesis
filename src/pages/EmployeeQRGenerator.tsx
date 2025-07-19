@@ -5,51 +5,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QRCodeGenerator } from "@/components/attendance/QRCodeGenerator";
 import { LogOut, QrCode } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import jksLogo from "@/assets/jks-logo.png";
 const EmployeeQRGenerator = () => {
   const navigate = useNavigate();
   const [employee, setEmployee] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        navigate("/employee-login");
-        return;
-      }
+    // Check if user is logged in via sessionStorage
+    const isLoggedIn = sessionStorage.getItem('employee-logged-in');
+    const employeeId = sessionStorage.getItem('employee-id');
+    
+    if (!isLoggedIn || !employeeId) {
+      navigate("/employee-login");
+      return;
+    }
 
-      // Get employee profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (profile) {
-        setEmployee(profile);
-      } else {
-        navigate("/employee-login");
-      }
-      setLoading(false);
-    };
-
-    checkAuth();
+    // Set employee data from sessionStorage
+    setEmployee({
+      employee_id: employeeId,
+      name: `Employee ${employeeId}`, // Simple demo name
+    });
   }, [navigate]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    // Clear sessionStorage
+    sessionStorage.removeItem('employee-logged-in');
+    sessionStorage.removeItem('employee-id');
     navigate("/employee-login");
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
   if (!employee) {
-    return null;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   return <div className="min-h-screen bg-gradient-jks-subtle">
       {/* Header */}
