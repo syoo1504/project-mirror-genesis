@@ -99,7 +99,7 @@ const AdminDashboard = () => {
   
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
 
-  // Load real attendance data from localStorage
+  // Load real attendance data from localStorage with real-time updates
   useEffect(() => {
     const loadAttendanceData = () => {
       const scanHistory = JSON.parse(localStorage.getItem("scanHistory") || "[]");
@@ -160,11 +160,17 @@ const AdminDashboard = () => {
 
     loadAttendanceData();
     
-    // Set up interval to refresh data every 5 seconds
-    const interval = setInterval(loadAttendanceData, 5000);
+    // Set up interval to refresh data every 3 seconds for live updates
+    const interval = setInterval(loadAttendanceData, 3000);
     
     return () => clearInterval(interval);
   }, [employees]);
+
+  // Force re-render of department data when attendance records change
+  useEffect(() => {
+    // This ensures department cards update when attendance changes
+    // The getDepartmentData function will be called again
+  }, [attendanceRecords, employees]);
   
   const [attendanceRecordsStatic] = useState<AttendanceRecord[]>([
     { employee: "Arissa Irda Binti Rais (1106)", date: "7/20/2025", checkIn: "00:35", checkOut: "00:35", lateDuration: "On time", status: "success" },
@@ -172,15 +178,95 @@ const AdminDashboard = () => {
     { employee: "Muhammad Ilyashah Bin Norazman (0107)", date: "7/12/2025", checkIn: "18:59", checkOut: "18:59", lateDuration: "9h 59m", status: "success" },
   ]);
 
-  const departmentData = [
-    { name: "Desktop Engineer", value: 25, color: "#10B981" },
-    { name: "Data Analyst", value: 13, color: "#3B82F6" },
-    { name: "Assistant Manager", value: 13, color: "#8B5CF6" },
-    { name: "Purchasing Manager", value: 13, color: "#06B6D4" },
-    { name: "HR Executive", value: 13, color: "#8B5CF6" },
-    { name: "Financial Analyst", value: 13, color: "#F97316" },
-    { name: "HR Manager", value: 13, color: "#EAB308" },
-  ];
+  // Calculate real-time department data
+  const getDepartmentData = () => {
+    const departmentStats = new Map();
+    
+    // Initialize with all departments from employees
+    employees.forEach(emp => {
+      const dept = emp.department || 'Unassigned';
+      if (!departmentStats.has(dept)) {
+        departmentStats.set(dept, {
+          name: dept,
+          totalEmployees: 0,
+          activeEmployees: 0,
+          totalAttendance: 0,
+          lateRecords: 0,
+          attendanceRate: 0,
+          punctualityRate: 0,
+          color: getRandomColor(dept)
+        });
+      }
+    });
+
+    // Count employees by department
+    employees.forEach(emp => {
+      const dept = emp.department || 'Unassigned';
+      const deptData = departmentStats.get(dept);
+      deptData.totalEmployees++;
+      if (emp.status === 'Active') {
+        deptData.activeEmployees++;
+      }
+    });
+
+    // Calculate attendance stats by department
+    attendanceRecords.forEach(record => {
+      // Extract employee ID from record
+      const employeeMatch = record.employee.match(/\(([^)]+)\)$/);
+      const employeeId = employeeMatch ? employeeMatch[1] : '';
+      
+      // Find employee to get department
+      const employee = employees.find(emp => emp.id === employeeId);
+      const dept = employee?.department || 'Unassigned';
+      
+      if (departmentStats.has(dept)) {
+        const deptData = departmentStats.get(dept);
+        
+        // Count total attendance records
+        if (record.checkIn && record.checkIn !== '--:--') {
+          deptData.totalAttendance++;
+        }
+        
+        // Count late records
+        if (record.lateDuration !== 'On time') {
+          deptData.lateRecords++;
+        }
+      }
+    });
+
+    // Calculate rates
+    departmentStats.forEach((deptData, dept) => {
+      // Attendance rate = (total attendance / total possible days) * 100
+      // For now, using active employees as baseline
+      const possibleDays = deptData.activeEmployees * 30; // Assuming 30 day period
+      deptData.attendanceRate = possibleDays > 0 
+        ? Math.round((deptData.totalAttendance / possibleDays) * 100) 
+        : 0;
+      
+      // Punctuality rate = ((total attendance - late records) / total attendance) * 100
+      deptData.punctualityRate = deptData.totalAttendance > 0 
+        ? Math.round(((deptData.totalAttendance - deptData.lateRecords) / deptData.totalAttendance) * 100)
+        : 100;
+    });
+
+    return Array.from(departmentStats.values());
+  };
+
+  const getRandomColor = (dept: string) => {
+    const colors = ["#10B981", "#3B82F6", "#8B5CF6", "#06B6D4", "#F97316", "#EAB308", "#EF4444"];
+    const index = dept.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+    return colors[index];
+  };
+
+  const departmentData = getDepartmentData();
+  
+  // For pie chart, calculate percentages
+  const totalEmployees = departmentData.reduce((sum, dept) => sum + dept.totalEmployees, 0);
+  const pieChartData = departmentData.map(dept => ({
+    name: dept.name,
+    value: totalEmployees > 0 ? Math.round((dept.totalEmployees / totalEmployees) * 100) : 0,
+    color: dept.color
+  }));
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -1113,14 +1199,14 @@ const AdminDashboard = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={departmentData}
+                          data={pieChartData}
                           cx="50%"
                           cy="50%"
                           outerRadius={120}
                           dataKey="value"
                           label={({ name, value }) => `${name} ${value}%`}
                         >
-                          {departmentData.map((entry, index) => (
+                          {pieChartData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
@@ -1131,33 +1217,79 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-white">
-                <CardHeader>
-                  <CardTitle>Department Performance</CardTitle>
-                  <p className="text-gray-600">Attendance and punctuality rates by department</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={(() => {
-                        const departmentStats = JSON.parse(localStorage.getItem("departmentStats") || "{}");
-                        return Object.entries(departmentStats).map(([dept, stats]: [string, any]) => ({
-                          department: dept,
-                          checkIns: stats.checkIns || 0,
-                          checkOuts: stats.checkOuts || 0
-                        }));
-                      })()}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="department" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="checkIns" fill="#10B981" name="Check-ins" />
-                        <Bar dataKey="checkOuts" fill="#3B82F6" name="Check-outs" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Live Department Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {departmentData.map((dept) => (
+                  <Card key={dept.name} className="bg-white border hover:shadow-lg transition-shadow duration-200">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg font-semibold text-gray-800">{dept.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total Employees:</span>
+                        <span className="text-lg font-bold text-gray-800">{dept.totalEmployees}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Active:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold bg-gray-800 text-white px-2 py-1 rounded-full">
+                            {dept.activeEmployees}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total Attendance:</span>
+                        <span className="text-lg font-bold text-gray-800">{dept.totalAttendance}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Late Records:</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold px-2 py-1 rounded-full ${
+                            dept.lateRecords === 0 
+                              ? 'bg-gray-800 text-white' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {dept.lateRecords}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Attendance Rate:</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold px-2 py-1 rounded-full ${
+                            dept.attendanceRate === 0 
+                              ? 'bg-red-100 text-red-700' 
+                              : dept.attendanceRate < 10 
+                                ? 'bg-red-100 text-red-700' 
+                                : 'bg-gray-800 text-white'
+                          }`}>
+                            {dept.attendanceRate}%
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Punctuality Rate:</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold px-2 py-1 rounded-full ${
+                            dept.punctualityRate === 100 
+                              ? 'bg-gray-800 text-white' 
+                              : dept.punctualityRate >= 75 
+                                ? 'bg-yellow-100 text-yellow-700' 
+                                : 'bg-red-100 text-red-700'
+                          }`}>
+                            {dept.punctualityRate}%
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
