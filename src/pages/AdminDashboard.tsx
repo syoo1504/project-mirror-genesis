@@ -352,19 +352,31 @@ const AdminDashboard = () => {
         description: "Uploading local data to Supabase database...",
       });
 
+      // First ensure admin profile exists for the current user
+      try {
+        const { error: adminError } = await supabase.rpc('ensure_admin_exists');
+        if (adminError) {
+          console.error('Error ensuring admin exists:', adminError);
+        }
+      } catch (error) {
+        console.error('Error calling ensure_admin_exists:', error);
+      }
+
       let migratedEmployees = 0;
       let migratedAttendance = 0;
 
-      // 1. Migrate employees to Supabase
+      // 1. Migrate employees to Supabase with all required fields
       for (const employee of employees) {
         const { error: empError } = await supabase
           .from('employees')
           .upsert({
             employee_id: employee.id,
             name: employee.name,
-            email: employee.email,
-            department: employee.department,
-            position: employee.designation,
+            email: employee.email || '',
+            phone: employee.phone || '',
+            department: employee.department || '',
+            designation: employee.designation || '',
+            position: employee.designation || '',
             is_active: employee.status === 'Active'
           }, {
             onConflict: 'employee_id'

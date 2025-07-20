@@ -26,6 +26,7 @@ export type Database = {
           notes: string | null
           status: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           attendance_date?: string
@@ -38,6 +39,7 @@ export type Database = {
           notes?: string | null
           status?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           attendance_date?: string
@@ -50,6 +52,30 @@ export type Database = {
           notes?: string | null
           status?: string | null
           updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          id: string
+          name: string
+        }
+        Insert: {
+          id?: string
+          name: string
+        }
+        Update: {
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -140,11 +166,56 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          created_at: string | null
+          department_id: string | null
+          email: string
+          employee_id: string | null
+          full_name: string
+          id: string
+          password: string
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          department_id?: string | null
+          email: string
+          employee_id?: string | null
+          full_name: string
+          id?: string
+          password: string
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string | null
+          email?: string
+          employee_id?: string | null
+          full_name?: string
+          id?: string
+          password?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      ensure_admin_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
