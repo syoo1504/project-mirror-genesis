@@ -482,32 +482,104 @@ const AdminDashboard = () => {
         version: "1.0"
       };
 
-      const dataStr = JSON.stringify(backupData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `jks-attendance-backup-${new Date().toISOString().split('T')[0]}.json`;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
+      
       toast({
         title: "Backup Created",
-        description: "Backup file has been downloaded successfully",
+        description: "System backup has been created successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Backup Failed",
-        description: "Failed to create backup file",
+        description: error.message || "An error occurred during backup",
         variant: "destructive"
       });
     }
   };
+
+  // Export functions for attendance reports
+  const handleExportSummaryReport = () => {
+    const csvHeaders = "Employee,Total Days,Present,Absent,Late,Attendance Rate\n";
+    
+    // Group attendance by employee
+    const employeeStats = employees.map(emp => {
+      const empRecords = attendanceRecords.filter(record => 
+        record.employee.includes(emp.name) || record.employee.includes(emp.id)
+      );
+      
+      const totalDays = empRecords.length;
+      const present = empRecords.filter(r => r.checkIn && r.checkIn !== "--:--").length;
+      const absent = totalDays - present;
+      const late = empRecords.filter(r => r.lateDuration !== "On time").length;
+      const attendanceRate = totalDays > 0 ? Math.round((present / totalDays) * 100) : 0;
+      
+      return `"${emp.name}",${totalDays},${present},${absent},${late},${attendanceRate}%`;
+    });
+    
+    const csvContent = csvHeaders + employeeStats.join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance-summary-report-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Report Downloaded",
+      description: "Summary report has been exported successfully",
+    });
+  };
+
+  const handleExportDetailedReport = () => {
+    const csvHeaders = "Date,Employee,Employee ID,Check-in,Check-out,Late Duration,Status,Location\n";
+    
+    const csvData = attendanceRecords.map(record => {
+      // Extract employee ID from the record (format: "Name (ID)")
+      const employeeMatch = record.employee.match(/\(([^)]+)\)$/);
+      const employeeId = employeeMatch ? employeeMatch[1] : 'N/A';
+      const employeeName = record.employee.replace(/\s*\([^)]*\)$/, '');
+      
+      const checkIn = record.checkIn || "--:--";
+      const checkOut = record.checkOut || "--:--";
+      const lateDuration = record.lateDuration || "On time";
+      const status = (checkIn !== "--:--") ? "Present" : "Absent";
+      const location = "Main Office";
+      
+      return `"${record.date}","${employeeName}","${employeeId}","${checkIn}","${checkOut}","${lateDuration}","${status}","${location}"`;
+    });
+    
+    const csvContent = csvHeaders + csvData.join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance-detailed-report-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Report Downloaded", 
+      description: "Detailed report has been exported successfully",
+    });
+  };
+
 
   const handleChooseFile = () => {
     fileInputRef.current?.click();
@@ -1101,11 +1173,17 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button className="bg-gray-800 text-white">
+                  <Button 
+                    onClick={handleExportSummaryReport}
+                    className="bg-gray-800 text-white"
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Export Summary Report
                   </Button>
-                  <Button variant="outline">
+                  <Button 
+                    onClick={handleExportDetailedReport}
+                    variant="outline"
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     Export Detailed Report
                   </Button>
