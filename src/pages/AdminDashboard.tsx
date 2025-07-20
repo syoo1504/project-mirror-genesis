@@ -742,7 +742,18 @@ const AdminDashboard = () => {
                     <CardTitle>Attendance Records</CardTitle>
                     <p className="text-gray-600">View and filter employee attendance records with late duration tracking</p>
                   </div>
-                  <Button className="bg-red-500 hover:bg-red-600 text-white">
+                  <Button 
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                    onClick={() => {
+                      setAttendanceRecords([]);
+                      localStorage.removeItem('attendanceRecords');
+                      toast({
+                        title: "Data Cleared",
+                        description: "All attendance records have been cleared",
+                        variant: "destructive"
+                      });
+                    }}
+                  >
                     Clear All Data
                   </Button>
                 </div>
