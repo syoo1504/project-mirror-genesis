@@ -17,9 +17,11 @@ const EmployeeScan = () => {
   const isFirstScanOfDay = () => {
     const today = new Date().toDateString();
     const existingScans = JSON.parse(localStorage.getItem("scanHistory") || "[]");
-    const todayScans = existingScans.filter((scan: any) => 
-      new Date(scan.timestamp).toDateString() === today
-    );
+    const todayScans = existingScans.filter((scan: any) => {
+      const scanDate = new Date(scan.timestamp).toDateString();
+      return scanDate === today && scan.employeeId === (employee.id || '0123');
+    });
+    console.log('Today scans for employee:', todayScans); // Debug log
     return todayScans.length === 0;
   };
 
