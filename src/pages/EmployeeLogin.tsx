@@ -67,6 +67,13 @@ const EmployeeLogin = () => {
       }
       
       if (employeeFound && isValidPassword) {
+        // Store login record in Supabase
+        await supabase.from('employee_logins').insert({
+          employee_id: employeeFound.id,
+          employee_name: employeeFound.name,
+          login_time: new Date().toISOString(),
+        });
+
         // Store employee details for sync
         const employeeData = {
           id: employeeFound.id,

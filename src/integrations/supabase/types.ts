@@ -104,6 +104,36 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_logins: {
+        Row: {
+          created_at: string
+          employee_id: string
+          employee_name: string | null
+          id: string
+          ip_address: string | null
+          login_time: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          employee_name?: string | null
+          id?: string
+          ip_address?: string | null
+          login_time?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          employee_name?: string | null
+          id?: string
+          ip_address?: string | null
+          login_time?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           created_at: string
