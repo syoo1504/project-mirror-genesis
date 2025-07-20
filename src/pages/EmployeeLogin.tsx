@@ -29,77 +29,66 @@ const EmployeeLogin = () => {
     setIsLoading(true);
 
     try {
-      // Check if employee exists in Supabase
-      const { data: employee, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .eq('is_active', true)
-        .single();
+      // First check localStorage for admin-added employees
+      const localEmployees = JSON.parse(localStorage.getItem('employees') || '[]');
+      let employeeFound = localEmployees.find((emp: any) => emp.id === employeeId);
+      
+      if (!employeeFound) {
+        // Check if employee exists in Supabase
+        const { data: employee, error } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('employee_id', employeeId)
+          .eq('is_active', true)
+          .maybeSingle();
 
-      if (error || !employee) {
-        // Fallback to demo employees if not in Supabase
-        const localEmployees = [
+        if (employee) {
+          employeeFound = {
+            id: employee.employee_id,
+            name: employee.name,
+            email: employee.email,
+            department: employee.department,
+            designation: employee.position || employee.designation
+          };
+        }
+      }
+      
+      if (!employeeFound) {
+        // Fallback to demo employees
+        const demoEmployees = [
           { id: "1106", name: "Arissa Irda Binti Rais", email: "arissa@jks.com.my", department: "HR", designation: "HR Executive" },
           { id: "0123", name: "Alex", email: "alex@jks.com", department: "HR", designation: "HR Manager" },
           { id: "0107", name: "Muhammad Ilyashah Bin Nor Azman", email: "ilyashah@jks.com", department: "IT", designation: "IT Officer" },
         ];
         
-        const localEmployee = localEmployees.find(emp => emp.id === employeeId);
+        employeeFound = demoEmployees.find(emp => emp.id === employeeId);
+      }
+      
+      if (employeeFound && password === "emp123") {
+        // Store employee details for sync
+        const employeeData = {
+          id: employeeFound.id,
+          name: employeeFound.name,
+          email: employeeFound.email,
+          department: employeeFound.department,
+          designation: employeeFound.designation
+        };
         
-        if (localEmployee && password === "emp123") {
-          // Store employee details for sync
-          const employeeData = {
-            id: localEmployee.id,
-            name: localEmployee.name,
-            email: localEmployee.email,
-            department: localEmployee.department,
-            designation: localEmployee.designation
-          };
-          
-          sessionStorage.setItem('employee-logged-in', 'true');
-          sessionStorage.setItem('employee-id', employeeId);
-          localStorage.setItem('currentEmployee', JSON.stringify(employeeData));
-          
-          toast({
-            title: "Login Successful",
-            description: `Welcome ${localEmployee.name}!`,
-          });
-          navigate("/employee/scan");
-        } else {
-          toast({
-            title: "Login Failed",
-            description: "Invalid Employee ID or password",
-            variant: "destructive",
-          });
-        }
+        sessionStorage.setItem('employee-logged-in', 'true');
+        sessionStorage.setItem('employee-id', employeeId);
+        localStorage.setItem('currentEmployee', JSON.stringify(employeeData));
+        
+        toast({
+          title: "Login Successful",
+          description: `Welcome ${employeeFound.name}!`,
+        });
+        navigate("/employee/scan");
       } else {
-        // Employee found in Supabase
-        if (password === "emp123") {
-          const employeeData = {
-            id: employee.employee_id,
-            name: employee.name,
-            email: employee.email,
-            department: employee.department,
-            designation: employee.position
-          };
-          
-          sessionStorage.setItem('employee-logged-in', 'true');
-          sessionStorage.setItem('employee-id', employeeId);
-          localStorage.setItem('currentEmployee', JSON.stringify(employeeData));
-          
-          toast({
-            title: "Login Successful",
-            description: `Welcome ${employee.name}!`,
-          });
-          navigate("/employee/scan");
-        } else {
-          toast({
-            title: "Login Failed",
-            description: "Invalid Employee ID or password",
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Login Failed",
+          description: "Invalid Employee ID or password",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       toast({

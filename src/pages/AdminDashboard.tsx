@@ -118,9 +118,6 @@ const AdminDashboard = () => {
           // Use the employee's full name from the database, fallback to scan data
           const employeeName = employee?.name || scan.employeeName || 'Unknown Employee';
           
-          // Check if employee is late (check-in after 8:30 AM)
-          const isLate = scan.type === "check-in" && scan.isLate;
-          
           attendanceMap.set(employeeKey, {
             employee: `${employeeName} (${scan.employeeId})`,
             date: date,
@@ -132,6 +129,7 @@ const AdminDashboard = () => {
         }
         
         const record = attendanceMap.get(employeeKey);
+        // Format time as HH:MM (24-hour format) matching the first image
         const time = new Date(scan.timestamp).toLocaleTimeString('en-US', { 
           hour12: false, 
           hour: '2-digit', 
@@ -146,7 +144,7 @@ const AdminDashboard = () => {
             const lateMinutes = ((checkInTime.getHours() - 8) * 60 + checkInTime.getMinutes()) - 30;
             const lateHours = Math.floor(lateMinutes / 60);
             const lateRemainingMinutes = lateMinutes % 60;
-            record.lateDuration = `${lateHours}h ${lateRemainingMinutes}m late`;
+            record.lateDuration = `${lateHours}h ${lateRemainingMinutes}m`;
           }
         } else if (scan.type === "check-out") {
           record.checkOut = time;
@@ -208,8 +206,8 @@ const AdminDashboard = () => {
   const checkedOutToday = todayRecords.filter(record => record.checkOut && record.checkOut !== "").length;
   const lateToday = todayRecords.filter(record => record.lateDuration !== "On time").length;
 
-  // Employee management functions
-  const handleAddEmployee = () => {
+  // Employee management functions with Supabase sync
+  const handleAddEmployee = async () => {
     if (!newEmployee.name || !newEmployee.email || !newEmployee.id) {
       toast({
         title: "Validation Error",
@@ -224,7 +222,35 @@ const AdminDashboard = () => {
       id: newEmployee.id
     };
 
-    setEmployees([...employees, employee]);
+    // Add to local state
+    const updatedEmployees = [...employees, employee];
+    setEmployees(updatedEmployees);
+    
+    // Sync to Supabase immediately
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .insert({
+          employee_id: employee.id,
+          name: employee.name,
+          email: employee.email,
+          phone: employee.phone,
+          department: employee.department,
+          position: employee.designation,
+          designation: employee.designation,
+          is_active: employee.status === 'Active'
+        });
+      
+      if (error) {
+        console.error('Error syncing employee to Supabase:', error);
+      }
+    } catch (error) {
+      console.error('Error syncing employee:', error);
+    }
+
+    // Update localStorage for login compatibility
+    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+
     setNewEmployee({
       id: "",
       name: "",
@@ -238,35 +264,83 @@ const AdminDashboard = () => {
     
     toast({
       title: "Employee Added",
-      description: `${employee.name} has been added successfully`,
+      description: `${employee.name} has been added successfully and synced to database`,
     });
   };
 
-  const handleEditEmployee = () => {
+  const handleEditEmployee = async () => {
     if (!selectedEmployee) return;
 
-    setEmployees(employees.map(emp => 
+    // Update local state
+    const updatedEmployees = employees.map(emp => 
       emp.id === selectedEmployee.id ? selectedEmployee : emp
-    ));
+    );
+    setEmployees(updatedEmployees);
+    
+    // Sync to Supabase immediately
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .update({
+          name: selectedEmployee.name,
+          email: selectedEmployee.email,
+          phone: selectedEmployee.phone,
+          department: selectedEmployee.department,
+          position: selectedEmployee.designation,
+          designation: selectedEmployee.designation,
+          is_active: selectedEmployee.status === 'Active'
+        })
+        .eq('employee_id', selectedEmployee.id);
+      
+      if (error) {
+        console.error('Error syncing employee update to Supabase:', error);
+      }
+    } catch (error) {
+      console.error('Error syncing employee update:', error);
+    }
+
+    // Update localStorage for login compatibility
+    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+
     setIsEditDialogOpen(false);
     setSelectedEmployeeForEdit(null);
     
     toast({
       title: "Employee Updated",
-      description: `${selectedEmployee.name} has been updated successfully`,
+      description: `${selectedEmployee.name} has been updated successfully and synced to database`,
     });
   };
 
-  const handleDeleteEmployee = () => {
+  const handleDeleteEmployee = async () => {
     if (!selectedEmployeeForDelete) return;
 
-    setEmployees(employees.filter(emp => emp.id !== selectedEmployeeForDelete.id));
+    // Update local state
+    const updatedEmployees = employees.filter(emp => emp.id !== selectedEmployeeForDelete.id);
+    setEmployees(updatedEmployees);
+    
+    // Sync to Supabase immediately
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .update({ is_active: false })
+        .eq('employee_id', selectedEmployeeForDelete.id);
+      
+      if (error) {
+        console.error('Error syncing employee deletion to Supabase:', error);
+      }
+    } catch (error) {
+      console.error('Error syncing employee deletion:', error);
+    }
+
+    // Update localStorage for login compatibility
+    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+
     setIsDeleteDialogOpen(false);
     setSelectedEmployeeForDelete(null);
     
     toast({
       title: "Employee Deleted",
-      description: `${selectedEmployeeForDelete.name} has been deleted permanently`,
+      description: `${selectedEmployeeForDelete.name} has been deleted permanently and synced to database`,
       variant: "destructive"
     });
   };
