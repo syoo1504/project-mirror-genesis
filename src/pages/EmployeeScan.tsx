@@ -77,6 +77,7 @@ const EmployeeScan = () => {
 
         const isFirstScan = isFirstScanOfDay();
         const scanType = isFirstScan ? "check-in" : "check-out";
+        console.log('Is first scan:', isFirstScan, 'Scan type:', scanType); // Debug log
 
         // Save scan data with late detection (8:30 AM official start time)
         const currentTime = new Date();
@@ -301,6 +302,41 @@ const EmployeeScan = () => {
               </CardContent>
             </Card>
           </div>
+
+          
+          {/* Debug Panel */}
+          <Card className="bg-blue-50 border border-blue-200 mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🔧 Debug Panel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Button 
+                  onClick={() => {
+                    localStorage.removeItem("scanHistory");
+                    toast({
+                      title: "Scan History Cleared",
+                      description: "Next scan will be check-in",
+                    });
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Clear Scan History (Reset to Check-in)
+                </Button>
+                <div className="text-sm text-gray-600">
+                  <p>Current Employee ID: {employee.id || '0123'}</p>
+                  <p>Scans today: {JSON.parse(localStorage.getItem("scanHistory") || "[]").filter((scan: any) => {
+                    const scanDate = new Date(scan.timestamp).toDateString();
+                    const today = new Date().toDateString();
+                    return scanDate === today && scan.employeeId === (employee.id || '0123');
+                  }).length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Instructions */}
           <Card className="bg-white">
