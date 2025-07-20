@@ -29,20 +29,31 @@ const EmployeeLogin = () => {
     setIsLoading(true);
 
     try {
-      // First check localStorage for admin-added employees
-      const localEmployees = JSON.parse(localStorage.getItem('employees') || '[]');
-      let employeeFound = localEmployees.find((emp: any) => emp.id === employeeId);
-      
-      if (!employeeFound) {
-        // Check if employee exists in Supabase
-        const { data: employee, error } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('employee_id', employeeId)
-          .eq('is_active', true)
-          .maybeSingle();
+      // Check if employee exists in Supabase and verify password
+      const { data: employee, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .eq('is_active', true)
+        .maybeSingle();
 
-        if (employee) {
+      if (error) {
+        throw error;
+      }
+
+      let employeeFound = null;
+      let isValidPassword = false;
+
+      if (employee) {
+        // Verify password using PostgreSQL crypt function
+        const { data: passwordCheck, error: passwordError } = await supabase
+          .rpc('verify_password', {
+            input_password: password,
+            stored_hash: employee.password_hash
+          });
+
+        if (!passwordError && passwordCheck) {
+          isValidPassword = true;
           employeeFound = {
             id: employee.employee_id,
             name: employee.name,
@@ -53,18 +64,22 @@ const EmployeeLogin = () => {
         }
       }
       
+      // Fallback to demo employees if not found in database
       if (!employeeFound) {
-        // Fallback to demo employees
         const demoEmployees = [
           { id: "1106", name: "Arissa Irda Binti Rais", email: "arissa@jks.com.my", department: "HR", designation: "HR Executive" },
           { id: "0123", name: "Alex", email: "alex@jks.com", department: "HR", designation: "HR Manager" },
           { id: "0107", name: "Muhammad Ilyashah Bin Nor Azman", email: "ilyashah@jks.com", department: "IT", designation: "IT Officer" },
         ];
         
-        employeeFound = demoEmployees.find(emp => emp.id === employeeId);
+        const demoEmployee = demoEmployees.find(emp => emp.id === employeeId);
+        if (demoEmployee && password === "emp123") {
+          employeeFound = demoEmployee;
+          isValidPassword = true;
+        }
       }
       
-      if (employeeFound && password === "emp123") {
+      if (employeeFound && isValidPassword) {
         // Store employee details for sync
         const employeeData = {
           id: employeeFound.id,
