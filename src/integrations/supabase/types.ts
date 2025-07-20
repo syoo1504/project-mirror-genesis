@@ -54,15 +54,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_records_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       departments: {
         Row: {
@@ -165,47 +157,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      users: {
-        Row: {
-          created_at: string | null
-          department_id: string | null
-          email: string
-          employee_id: string | null
-          full_name: string
-          id: string
-          password: string
-          role: string
-        }
-        Insert: {
-          created_at?: string | null
-          department_id?: string | null
-          email: string
-          employee_id?: string | null
-          full_name: string
-          id?: string
-          password: string
-          role: string
-        }
-        Update: {
-          created_at?: string | null
-          department_id?: string | null
-          email?: string
-          employee_id?: string | null
-          full_name?: string
-          id?: string
-          password?: string
-          role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "users_department_id_fkey"
-            columns: ["department_id"]
-            isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
