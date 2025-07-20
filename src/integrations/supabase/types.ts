@@ -14,36 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      admins: {
+      admin_logins: {
         Row: {
+          admin_name: string | null
+          admin_username: string
           created_at: string
-          email: string | null
           id: string
-          is_active: boolean
-          name: string
-          password_hash: string
-          updated_at: string
-          username: string
+          ip_address: string | null
+          login_time: string
+          user_agent: string | null
         }
         Insert: {
+          admin_name?: string | null
+          admin_username: string
           created_at?: string
-          email?: string | null
           id?: string
-          is_active?: boolean
-          name: string
-          password_hash: string
-          updated_at?: string
-          username: string
+          ip_address?: string | null
+          login_time?: string
+          user_agent?: string | null
         }
         Update: {
+          admin_name?: string | null
+          admin_username?: string
           created_at?: string
-          email?: string | null
           id?: string
-          is_active?: boolean
-          name?: string
-          password_hash?: string
-          updated_at?: string
-          username?: string
+          ip_address?: string | null
+          login_time?: string
+          user_agent?: string | null
         }
         Relationships: []
       }

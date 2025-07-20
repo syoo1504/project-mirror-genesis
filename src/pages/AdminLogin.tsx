@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import jksLogo from "@/assets/jks-logo.png";
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
@@ -13,6 +14,7 @@ const AdminLogin = () => {
   const {
     toast
   } = useToast();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -27,9 +29,16 @@ const AdminLogin = () => {
 
     setIsLoading(true);
 
-    // Simple demo authentication
-    setTimeout(() => {
+    try {
+      // Simple demo authentication
       if (username === "admin" && password === "admin123") {
+        // Store login record in Supabase
+        await supabase.from('admin_logins').insert({
+          admin_username: username,
+          admin_name: "System Administrator",
+          login_time: new Date().toISOString(),
+        });
+
         toast({
           title: "Login Successful",
           description: "Welcome to Admin Dashboard",
@@ -42,8 +51,15 @@ const AdminLogin = () => {
           variant: "destructive",
         });
       }
-      setIsLoading(false);
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "An error occurred during login",
+        variant: "destructive",
+      });
+    }
+    
+    setIsLoading(false);
   };
   return <div className="min-h-screen bg-gradient-jks-subtle flex items-center justify-center p-4">
       <div className="w-full max-w-md">
