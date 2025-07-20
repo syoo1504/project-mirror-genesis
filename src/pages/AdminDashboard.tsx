@@ -1217,6 +1217,31 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
 
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle>Department Performance</CardTitle>
+                  <p className="text-gray-600">Attendance and punctuality rates by department</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={departmentData.map(dept => ({
+                        department: dept.name,
+                        checkIns: dept.totalAttendance,
+                        checkOuts: dept.totalAttendance - dept.lateRecords
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="department" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="checkIns" fill="#10B981" name="Check-ins" />
+                        <Bar dataKey="checkOuts" fill="#3B82F6" name="Check-outs" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Live Department Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {departmentData.map((dept) => (
