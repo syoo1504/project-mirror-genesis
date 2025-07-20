@@ -50,31 +50,51 @@ const EmployeeReport = () => {
   };
 
   const downloadReport = () => {
-    const reportData = {
-      employee: {
-        id: employee.id || 'EMP001',
-        name: getEmployeeDetails().name,
-        department: getEmployeeDetails().department,
-      },
-      summary: {
-        totalScans: scanHistory.length,
-        thisMonth: scanHistory.filter(record => 
-          new Date(record.timestamp).getMonth() === new Date().getMonth()
-        ).length,
-        totalHours: getTotalHours(),
-        attendanceRate: calculateAttendanceRate(),
-      },
-      records: scanHistory,
-      generatedAt: new Date().toISOString(),
-    };
-
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { 
-      type: 'application/json' 
+    const employeeDetails = getEmployeeDetails();
+    
+    // Create CSV content
+    const csvHeaders = "Date,Check-in Time,Check-out Time,Working Hours,Status\n";
+    const csvData = scanHistory.map(record => {
+      const date = formatDate(record.timestamp);
+      const time = formatTime(record.timestamp).substring(0, 5);
+      
+      // Group records by date to get full day info
+      const dayRecords = scanHistory.filter(r => formatDate(r.timestamp) === date);
+      const checkIn = dayRecords.find(r => r.type === "check-in");
+      const checkOut = dayRecords.find(r => r.type === "check-out");
+      
+      const checkInTime = checkIn ? formatTime(checkIn.timestamp).substring(0, 5) : "--:--";
+      const checkOutTime = checkOut ? formatTime(checkOut.timestamp).substring(0, 5) : "--:--";
+      
+      // Calculate working hours
+      let workingHours = "0h 0m";
+      if (checkIn && checkOut) {
+        const checkInDate = new Date(checkIn.timestamp);
+        const checkOutDate = new Date(checkOut.timestamp);
+        const diffMs = checkOutDate.getTime() - checkInDate.getTime();
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        workingHours = `${hours}h ${minutes}m`;
+      }
+      
+      // Check if late
+      const checkInDate = checkIn ? new Date(checkIn.timestamp) : null;
+      const isLate = checkInDate && (checkInDate.getHours() > 8 || (checkInDate.getHours() === 8 && checkInDate.getMinutes() > 30));
+      const status = isLate ? "LATE" : "ON TIME";
+      
+      return `${date},${checkInTime},${checkOutTime},${workingHours},${status}`;
     });
+    
+    // Remove duplicate dates (since we process all records but want unique days)
+    const uniqueDays = [...new Set(csvData)];
+    
+    const csvContent = csvHeaders + uniqueDays.join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `attendance-report-${employee.id || 'EMP001'}-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `attendance-report-${employee.id || 'EMP001'}-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
