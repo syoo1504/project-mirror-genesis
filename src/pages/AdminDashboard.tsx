@@ -545,21 +545,31 @@ const AdminDashboard = () => {
   };
 
   const handleExportDetailedReport = () => {
-    const csvHeaders = "Date,Employee,Employee ID,Check-in,Check-out,Late Duration,Status,Location\n";
+    // CSV format that exactly matches Supabase attendance_records table structure
+    const csvHeaders = "employee_id,attendance_date,check_in_time,check_out_time,status,location,notes\n";
     
     const csvData = attendanceRecords.map(record => {
       // Extract employee ID from the record (format: "Name (ID)")
       const employeeMatch = record.employee.match(/\(([^)]+)\)$/);
-      const employeeId = employeeMatch ? employeeMatch[1] : 'N/A';
-      const employeeName = record.employee.replace(/\s*\([^)]*\)$/, '');
+      const employeeId = employeeMatch ? employeeMatch[1] : 'EMP001';
       
-      const checkIn = record.checkIn || "--:--";
-      const checkOut = record.checkOut || "--:--";
-      const lateDuration = record.lateDuration || "On time";
-      const status = (checkIn !== "--:--") ? "Present" : "Absent";
+      // Convert date to YYYY-MM-DD format
+      const dateParts = record.date.split('/');
+      const attendanceDate = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+      
+      // Format times as full timestamps if they exist
+      const checkInTime = (record.checkIn && record.checkIn !== "--:--") 
+        ? `${attendanceDate} ${record.checkIn}:00` 
+        : '';
+      const checkOutTime = (record.checkOut && record.checkOut !== "--:--") 
+        ? `${attendanceDate} ${record.checkOut}:00` 
+        : '';
+      
+      const status = (record.checkIn && record.checkIn !== "--:--") ? "present" : "absent";
       const location = "Main Office";
+      const notes = record.lateDuration !== "On time" ? `Late: ${record.lateDuration}` : "";
       
-      return `"${record.date}","${employeeName}","${employeeId}","${checkIn}","${checkOut}","${lateDuration}","${status}","${location}"`;
+      return `"${employeeId}","${attendanceDate}","${checkInTime}","${checkOutTime}","${status}","${location}","${notes}"`;
     });
     
     const csvContent = csvHeaders + csvData.join('\n');
@@ -568,7 +578,7 @@ const AdminDashboard = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `attendance-detailed-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `supabase-attendance-records-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -576,7 +586,7 @@ const AdminDashboard = () => {
     
     toast({
       title: "Report Downloaded", 
-      description: "Detailed report has been exported successfully",
+      description: "Supabase-compatible CSV report exported successfully",
     });
   };
 

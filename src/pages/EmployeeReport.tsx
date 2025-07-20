@@ -52,8 +52,8 @@ const EmployeeReport = () => {
   const downloadReport = () => {
     const employeeDetails = getEmployeeDetails();
     
-    // Create CSV content matching Supabase attendance_records table structure
-    const csvHeaders = "id,employee_id,attendance_date,check_in_time,check_out_time,status,location,notes,created_at,updated_at\n";
+    // Create CSV content matching Supabase attendance_records table structure EXACTLY
+    const csvHeaders = "employee_id,attendance_date,check_in_time,check_out_time,status,location,notes\n";
     
     // Group records by date first to create proper attendance records
     const groupedRecords = scanHistory.reduce((groups: any, record) => {
@@ -70,8 +70,6 @@ const EmployeeReport = () => {
       const checkIn = dayRecords.find(r => r.type === "check-in");
       const checkOut = dayRecords.find(r => r.type === "check-out");
       
-      // Generate a UUID-like ID for CSV (since we don't have actual UUIDs from localStorage)
-      const recordId = `${employee.id || 'EMP001'}-${date.replace(/\//g, '-')}`;
       const employeeId = employee.id || 'EMP001';
       const attendanceDate = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD format
       const checkInTime = checkIn ? new Date(checkIn.timestamp).toISOString() : '';
@@ -84,10 +82,8 @@ const EmployeeReport = () => {
       
       const location = checkIn?.location || 'Main Office';
       const notes = isLate ? 'Late arrival' : '';
-      const createdAt = checkIn ? new Date(checkIn.timestamp).toISOString() : new Date().toISOString();
-      const updatedAt = checkOut ? new Date(checkOut.timestamp).toISOString() : createdAt;
       
-      return `"${recordId}","${employeeId}","${attendanceDate}","${checkInTime}","${checkOutTime}","${status}","${location}","${notes}","${createdAt}","${updatedAt}"`;
+      return `"${employeeId}","${attendanceDate}","${checkInTime}","${checkOutTime}","${status}","${location}","${notes}"`;
     });
     
     const csvContent = csvHeaders + csvData.join('\n');
@@ -96,7 +92,7 @@ const EmployeeReport = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `attendance-records-${employee.id || 'EMP001'}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `supabase-attendance-records-${employee.id || 'EMP001'}-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
