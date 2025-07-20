@@ -57,36 +57,42 @@ export type Database = {
         Row: {
           created_at: string
           department: string | null
+          designation: string | null
           email: string | null
           employee_id: string
           id: string
           is_active: boolean | null
           name: string
           password_hash: string | null
+          phone: string | null
           position: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           department?: string | null
+          designation?: string | null
           email?: string | null
           employee_id: string
           id?: string
           is_active?: boolean | null
           name: string
           password_hash?: string | null
+          phone?: string | null
           position?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           department?: string | null
+          designation?: string | null
           email?: string | null
           employee_id?: string
           id?: string
           is_active?: boolean | null
           name?: string
           password_hash?: string | null
+          phone?: string | null
           position?: string | null
           updated_at?: string
         }
