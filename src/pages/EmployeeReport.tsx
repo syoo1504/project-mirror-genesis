@@ -52,49 +52,51 @@ const EmployeeReport = () => {
   const downloadReport = () => {
     const employeeDetails = getEmployeeDetails();
     
-    // Create CSV content
-    const csvHeaders = "Date,Check-in Time,Check-out Time,Working Hours,Status\n";
-    const csvData = scanHistory.map(record => {
+    // Create CSV content matching Supabase attendance_records table structure
+    const csvHeaders = "id,employee_id,attendance_date,check_in_time,check_out_time,status,location,notes,created_at,updated_at\n";
+    
+    // Group records by date first to create proper attendance records
+    const groupedRecords = scanHistory.reduce((groups: any, record) => {
       const date = formatDate(record.timestamp);
-      const time = formatTime(record.timestamp).substring(0, 5);
-      
-      // Group records by date to get full day info
-      const dayRecords = scanHistory.filter(r => formatDate(r.timestamp) === date);
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(record);
+      return groups;
+    }, {});
+
+    const csvData = Object.entries(groupedRecords).map(([date, records]: [string, any]) => {
+      const dayRecords = records as ScanRecord[];
       const checkIn = dayRecords.find(r => r.type === "check-in");
       const checkOut = dayRecords.find(r => r.type === "check-out");
       
-      const checkInTime = checkIn ? formatTime(checkIn.timestamp).substring(0, 5) : "--:--";
-      const checkOutTime = checkOut ? formatTime(checkOut.timestamp).substring(0, 5) : "--:--";
+      // Generate a UUID-like ID for CSV (since we don't have actual UUIDs from localStorage)
+      const recordId = `${employee.id || 'EMP001'}-${date.replace(/\//g, '-')}`;
+      const employeeId = employee.id || 'EMP001';
+      const attendanceDate = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD format
+      const checkInTime = checkIn ? new Date(checkIn.timestamp).toISOString() : '';
+      const checkOutTime = checkOut ? new Date(checkOut.timestamp).toISOString() : '';
       
-      // Calculate working hours
-      let workingHours = "0h 0m";
-      if (checkIn && checkOut) {
-        const checkInDate = new Date(checkIn.timestamp);
-        const checkOutDate = new Date(checkOut.timestamp);
-        const diffMs = checkOutDate.getTime() - checkInDate.getTime();
-        const hours = Math.floor(diffMs / (1000 * 60 * 60));
-        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        workingHours = `${hours}h ${minutes}m`;
-      }
-      
-      // Check if late
+      // Determine status
       const checkInDate = checkIn ? new Date(checkIn.timestamp) : null;
       const isLate = checkInDate && (checkInDate.getHours() > 8 || (checkInDate.getHours() === 8 && checkInDate.getMinutes() > 30));
-      const status = isLate ? "LATE" : "ON TIME";
+      const status = checkIn ? (isLate ? 'late' : 'present') : 'absent';
       
-      return `${date},${checkInTime},${checkOutTime},${workingHours},${status}`;
+      const location = checkIn?.location || 'Main Office';
+      const notes = isLate ? 'Late arrival' : '';
+      const createdAt = checkIn ? new Date(checkIn.timestamp).toISOString() : new Date().toISOString();
+      const updatedAt = checkOut ? new Date(checkOut.timestamp).toISOString() : createdAt;
+      
+      return `"${recordId}","${employeeId}","${attendanceDate}","${checkInTime}","${checkOutTime}","${status}","${location}","${notes}","${createdAt}","${updatedAt}"`;
     });
     
-    // Remove duplicate dates (since we process all records but want unique days)
-    const uniqueDays = [...new Set(csvData)];
-    
-    const csvContent = csvHeaders + uniqueDays.join('\n');
+    const csvContent = csvHeaders + csvData.join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `attendance-report-${employee.id || 'EMP001'}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `attendance-records-${employee.id || 'EMP001'}-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
